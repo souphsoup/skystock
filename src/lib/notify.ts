@@ -123,7 +123,7 @@ export async function buildDigest(
     date,
     lang,
     title: t("สรุปสต๊อกเมื่อวาน"),
-    subtitle: `${outlet?.name ?? "SOP-Stock"} · ${day}`,
+    subtitle: `${outlet?.name ?? "meStock"} · ${day}`,
     status,
     stats,
     sections,

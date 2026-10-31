@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     ]);
 
     const wb = new ExcelJS.Workbook();
-    wb.creator = "SOP-Stock";
+    wb.creator = "meStock";
     wb.created = new Date();
 
     const head = (ws: ExcelJS.Worksheet) => {

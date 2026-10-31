@@ -14,7 +14,7 @@ export default async function LoginPage() {
           <LangSwitch compact />
         </div>
         <p className="text-sm font-semibold tracking-wide text-accent">MAI The Sky Bar</p>
-        <h1 className="mt-1 text-3xl font-bold">SOP-Stock</h1>
+        <h1 className="mt-1 text-3xl font-bold">meStock</h1>
         <p className="mt-1 text-muted">{t("นับสต๊อกครัวและบาร์")}</p>
       </div>
       <LoginForm />

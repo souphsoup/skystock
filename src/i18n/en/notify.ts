@@ -20,12 +20,12 @@ const notify: Record<string, string> = {
   "{n} ใบ": "{n}",
   "และอีก {n} รายการ": "and {n, # more item, # more items}",
   "เปิด Dashboard": "Open Dashboard",
-  "ส่งอัตโนมัติจาก SOP-Stock": "Sent automatically by SOP-Stock",
+  "ส่งอัตโนมัติจาก meStock": "Sent automatically by meStock",
   "ตัวอย่างสรุปตอนเช้า": "Morning summary preview",
 
   // LINE webhook reply (Thai and English are both sent)
-  "เชื่อมแชตนี้กับ SOP-Stock แล้ว\nรอ Admin เปิดรับ \"สรุปสต๊อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า":
-    "This chat is now linked to SOP-Stock.\nWaiting for Admin to switch on the \"morning stock summary\" in Settings › Morning summary.",
+  "เชื่อมแชตนี้กับ meStock แล้ว\nรอ Admin เปิดรับ \"สรุปสต๊อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า":
+    "This chat is now linked to meStock.\nWaiting for Admin to switch on the \"morning stock summary\" in Settings › Morning summary.",
 
   // run statuses (src/lib/notify-labels.ts)
   "กำลังส่ง": "Sending",

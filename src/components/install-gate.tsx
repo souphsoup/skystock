@@ -43,7 +43,7 @@ function AndroidInstall() {
   if (state === "installed") {
     return (
       <p className="rounded-xl bg-ok-soft px-4 py-3 font-medium text-ok">
-        {t("ติดตั้งแล้ว เปิด SOP-Stock จากไอคอนบนหน้าจอได้เลย")}
+        {t("ติดตั้งแล้ว เปิด meStock จากไอคอนบนหน้าจอได้เลย")}
       </p>
     );
   }
@@ -70,7 +70,7 @@ function AndroidInstall() {
       steps={[
         <>{t("แตะ ⋮ มุมขวาบนของ Chrome")}</>,
         <>{t("เลือก “ติดตั้งแอป” หรือ “เพิ่มลงในหน้าจอหลัก”")}</>,
-        <>{t("เปิด SOP-Stock จากไอคอนบนหน้าจอ")}</>,
+        <>{t("เปิด meStock จากไอคอนบนหน้าจอ")}</>,
       ]}
     />
   );
@@ -91,7 +91,7 @@ export function InstallGate() {
           {/* eslint-disable-next-line @next/next/no-img-element -- static app icon */}
           <img src="/icons/icon-192.png" alt="" width={80} height={80} className="rounded-2xl" />
           <p className="mt-4 text-sm font-semibold tracking-wide text-accent">MAI The Sky Bar</p>
-          <h1 className="mt-1 text-2xl font-bold">{t("ติดตั้ง SOP-Stock ลงเครื่อง")}</h1>
+          <h1 className="mt-1 text-2xl font-bold">{t("ติดตั้ง meStock ลงเครื่อง")}</h1>
           <p className="mt-1 text-muted">{t("เปิดจากไอคอนบนหน้าจอ ใช้งานได้แม้สัญญาณหลุด")}</p>
         </div>
 
@@ -122,7 +122,7 @@ export function InstallGate() {
                   {t("ในแถบของ Safari")}
                 </span>,
                 <>{t("เลือก “เพิ่มไปยังหน้าจอโฮม”")}</>,
-                <>{t("แตะ “เพิ่ม” แล้วเปิด SOP-Stock จากไอคอนบนหน้าจอ")}</>,
+                <>{t("แตะ “เพิ่ม” แล้วเปิด meStock จากไอคอนบนหน้าจอ")}</>,
               ]}
             />
           </div>
@@ -133,7 +133,7 @@ export function InstallGate() {
         </div>
 
         <p className="text-center text-sm text-muted">
-          {t("ติดตั้งไว้แล้ว? เปิดจากไอคอน SOP-Stock บนหน้าจอได้เลย")}
+          {t("ติดตั้งไว้แล้ว? เปิดจากไอคอน meStock บนหน้าจอได้เลย")}
         </p>
         <button type="button" className="btn btn-ghost border-0 text-sm text-muted underline" onClick={skip}>
           {t("ใช้งานในเบราว์เซอร์ไปก่อน")}

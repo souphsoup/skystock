@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SOP-Stock · MAI The Sky Bar",
-    short_name: "SOP-Stock",
+    name: "meStock",
+    short_name: "meStock",
     description: "นับสต๊อกครัวและบาร์จากมือถือ",
     start_url: "/",
     display: "standalone",

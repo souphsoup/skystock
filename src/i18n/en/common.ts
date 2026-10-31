@@ -29,7 +29,7 @@ const common: Record<string, string> = {
   "ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง": "Wrong username or PIN",
   "ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน {n} นาที": "Too many wrong PINs. Try again in {n} minutes.",
   // install gate (phones, before the app is on the home screen)
-  "ติดตั้ง SOP-Stock ลงเครื่อง": "Install SOP-Stock",
+  "ติดตั้ง meStock ลงเครื่อง": "Install meStock",
   "เปิดจากไอคอนบนหน้าจอ ใช้งานได้แม้สัญญาณหลุด": "Open it from your home screen. Works even when the signal drops.",
   "ลิงก์นี้เปิดอยู่ใน LINE ซึ่งติดตั้งแอปไม่ได้ ให้เปิดในเบราว์เซอร์ก่อน":
     "This link is open inside LINE, which can't install apps. Open it in your browser first.",
@@ -40,13 +40,13 @@ const common: Record<string, string> = {
   "แตะปุ่มแชร์": "Tap the Share button",
   "ในแถบของ Safari": "in Safari's toolbar",
   "เลือก “เพิ่มไปยังหน้าจอโฮม”": "Choose “Add to Home Screen”",
-  "แตะ “เพิ่ม” แล้วเปิด SOP-Stock จากไอคอนบนหน้าจอ": "Tap “Add”, then open SOP-Stock from the icon",
+  "แตะ “เพิ่ม” แล้วเปิด meStock จากไอคอนบนหน้าจอ": "Tap “Add”, then open meStock from the icon",
   "แตะ ⋮ มุมขวาบนของ Chrome": "Tap ⋮ in Chrome's top-right corner",
   "เลือก “ติดตั้งแอป” หรือ “เพิ่มลงในหน้าจอหลัก”": "Choose “Install app” or “Add to Home screen”",
-  "เปิด SOP-Stock จากไอคอนบนหน้าจอ": "Open SOP-Stock from the icon on your home screen",
+  "เปิด meStock จากไอคอนบนหน้าจอ": "Open meStock from the icon on your home screen",
   "ติดตั้งแอป": "Install app",
-  "ติดตั้งแล้ว เปิด SOP-Stock จากไอคอนบนหน้าจอได้เลย": "Installed. Open SOP-Stock from your home screen.",
-  "ติดตั้งไว้แล้ว? เปิดจากไอคอน SOP-Stock บนหน้าจอได้เลย": "Already installed? Open SOP-Stock from your home screen.",
+  "ติดตั้งแล้ว เปิด meStock จากไอคอนบนหน้าจอได้เลย": "Installed. Open meStock from your home screen.",
+  "ติดตั้งไว้แล้ว? เปิดจากไอคอน meStock บนหน้าจอได้เลย": "Already installed? Open meStock from your home screen.",
   "ใช้งานในเบราว์เซอร์ไปก่อน": "Use in the browser for now",
   // errors (session / api)
   "กรุณาเข้าสู่ระบบใหม่": "Please sign in again",

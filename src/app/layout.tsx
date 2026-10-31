@@ -20,9 +20,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SOP-Stock · MAI The Sky Bar",
+  title: "meStock · MAI The Sky Bar",
   description: "นับสต๊อกครัวและบาร์จากมือถือ",
-  appleWebApp: { capable: true, title: "SOP-Stock", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "meStock", statusBarStyle: "default" },
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };
 

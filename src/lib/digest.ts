@@ -163,7 +163,7 @@ export function toEmail(d: Digest): { subject: string; html: string; text: strin
       }
     </td></tr>
   </table>
-  <p style="font-size:12px;color:${HEX.muted}">${esc(t("ส่งอัตโนมัติจาก SOP-Stock"))}</p>
+  <p style="font-size:12px;color:${HEX.muted}">${esc(t("ส่งอัตโนมัติจาก meStock"))}</p>
   </td></tr></table></body></html>`;
 
   const plain = [
