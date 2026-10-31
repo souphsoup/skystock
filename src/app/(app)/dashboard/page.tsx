@@ -175,9 +175,14 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                 <h2 className="font-semibold">
                   {loc} · {fmtRange(from, to, lang)}
                 </h2>
-                <a href={`/api/reports/export?period=${period}`} className="btn min-h-10 px-3 text-sm" download>
-                  <IconDownload width={16} height={16} /> Excel
-                </a>
+                <div className="flex gap-2">
+                  <a href={`/api/reports/export?period=${period}`} className="btn min-h-10 px-3 text-sm" download>
+                    <IconDownload width={16} height={16} /> Excel
+                  </a>
+                  <Link href={`/report?period=${period}`} className="btn min-h-10 px-3 text-sm">
+                    <IconDownload width={16} height={16} /> PDF
+                  </Link>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

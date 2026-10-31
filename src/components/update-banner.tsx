@@ -37,7 +37,7 @@ export function UpdateBanner() {
 
   if (!hasUpdate) return null;
   return (
-    <div className="fixed inset-x-0 top-0 z-30 px-3 pt-[calc(env(safe-area-inset-top)+8px)]">
+    <div className="fixed inset-x-0 top-0 z-30 print:hidden px-3 pt-[calc(env(safe-area-inset-top)+8px)]">
       <div role="status" className="card mx-auto flex max-w-xl items-center gap-3 p-3 shadow-lg">
         <p className="flex-1 text-sm font-medium">{t("มีอัปเดตใหม่ แตะรีเฟรชเพื่อใช้เวอร์ชันล่าสุด")}</p>
         <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>

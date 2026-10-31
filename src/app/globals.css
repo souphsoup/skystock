@@ -21,7 +21,8 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
+/* print/PDF always uses the light palette */
+@media screen and (prefers-color-scheme: dark) {
   :root {
     --paper: #0d141d;
     --surface: #151f2b;
@@ -181,4 +182,19 @@ html[data-install="android"] #install-gate [data-for="android"],
 html[data-install="line"] #install-gate [data-for="line"],
 html[data-install="inapp"] #install-gate [data-for="inapp"] {
   display: block;
+}
+
+/* /report → พิมพ์ / บันทึก PDF */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+@media print {
+  .report {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .report thead {
+    display: table-header-group;
+  }
 }

@@ -1,4 +1,4 @@
-// Review (supervisor approval), dashboard, alerts, Excel export, errors raised by src/lib/stock.ts.
+// Review (supervisor approval), dashboard, alerts, Excel and PDF export, errors raised by src/lib/stock.ts.
 const reports: Record<string, string> = {
   // errors and hints (src/lib/stock.ts); field names รับเข้า / เบิกออก / คงเหลือ come from staff.ts
   "ไม่พบรอบนับนี้": "Count round not found",
@@ -108,5 +108,12 @@ const reports: Record<string, string> = {
   "หมายเหตุ": "Note",
   "บันทึกโดย": "Recorded by",
   "ยกเลิก: {reason}": "Void: {reason}",
+
+  // PDF report (/report)
+  "รายงานสต๊อก": "Stock report",
+  "พิมพ์ / บันทึก PDF": "Print / Save as PDF",
+  "พิมพ์เมื่อ {at} โดย {name}": "Printed {at} by {name}",
+  "วันที่นับครบทุกจุด": "Days fully counted",
+  "รวม": "Total",
 };
 export default reports;
