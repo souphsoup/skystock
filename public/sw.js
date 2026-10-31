@@ -2,7 +2,7 @@
 // drops (ห้องเย็น, ดาดฟ้า). Data itself lives in IndexedDB on the page side;
 // API calls are never cached here.
 
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC_CACHE = `sop-static-${VERSION}`;
 const PAGE_CACHE = `sop-pages-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
