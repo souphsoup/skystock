@@ -6,6 +6,7 @@ import { putPhoto } from "./files";
 import { businessDate } from "./dates";
 import { can, type CountStatus } from "./types";
 import { WASTE_REASONS, type MoveInput, type MoveKind } from "./movement-types";
+import { tk } from "@/i18n";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const KINDS: MoveKind[] = ["receive", "issue", "transfer", "waste"];
@@ -28,7 +29,7 @@ const optText = (v: unknown, max: number) =>
 async function ownLocation(db: Db, user: User, id: unknown, label: string): Promise<number> {
   const n = Number(id);
   const [loc] = await db.query<{ outlet_id: number }>(`select outlet_id from locations where id = $1 and active`, [n]);
-  if (!Number.isInteger(n) || !loc || loc.outlet_id !== user.outletId) throw new HttpError(400, `กรุณาเลือก${label}`);
+  if (!Number.isInteger(n) || !loc || loc.outlet_id !== user.outletId) throw new HttpError(400, "กรุณาเลือก{label}", { label });
   return n;
 }
 
@@ -79,8 +80,8 @@ export async function recordMovement(
   const [dup] = await db.query<{ id: number }>(`select id from movements where client_id = $1`, [input.clientId]);
   if (dup) return { id: dup.id, duplicate: true };
 
-  const locationId = await ownLocation(db, user, input.locationId, "จุดเก็บ");
-  const toLocationId = input.kind === "transfer" ? await ownLocation(db, user, input.toLocationId, "จุดปลายทาง") : null;
+  const locationId = await ownLocation(db, user, input.locationId, tk("จุดเก็บ"));
+  const toLocationId = input.kind === "transfer" ? await ownLocation(db, user, input.toLocationId, tk("จุดปลายทาง")) : null;
   if (toLocationId === locationId) throw new HttpError(400, "จุดต้นทางและปลายทางต้องไม่ใช่ที่เดียวกัน");
 
   const reason = input.kind === "waste" ? String(input.reason ?? "") : null;
@@ -118,7 +119,7 @@ export async function recordMovement(
     for (const l of lines) {
       const it = byId.get(l.itemId);
       if (!it || !it.active) throw new HttpError(400, "มีรายการที่ถูกปิดใช้งานหรือไม่พบแล้ว");
-      if (it.location_id !== locationId) throw new HttpError(400, `${it.name_th} ไม่ได้อยู่ที่จุดเก็บที่เลือก`);
+      if (it.location_id !== locationId) throw new HttpError(400, "{name} ไม่ได้อยู่ที่จุดเก็บที่เลือก", { name: it.name_th });
     }
 
     const [m] = await tx.query<{ id: number }>(

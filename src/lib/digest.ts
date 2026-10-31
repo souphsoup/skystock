@@ -1,5 +1,8 @@
 // Morning summary ("สรุปสต๊อกตอนเช้า") as plain data, plus renderers for LINE Flex
 // and email. No server-only imports: the settings page renders the same Digest as a preview.
+// Every text is already in the Digest's language; the renderers translate their own fixed texts.
+
+import { makeT, type Lang } from "@/i18n";
 
 export type Tone = "ok" | "warn" | "bad" | "muted";
 
@@ -11,6 +14,7 @@ export interface DigestRow {
 
 export interface Digest {
   date: string; // business date the summary covers (yesterday)
+  lang: Lang;
   title: string;
   subtitle: string;
   status: { text: string; tone: Tone }[];
@@ -46,6 +50,7 @@ function row(r: DigestRow): Flex {
 }
 
 export function toFlex(d: Digest): Flex {
+  const t = makeT(d.lang);
   const body: Flex[] = [
     {
       type: "box",
@@ -73,7 +78,7 @@ export function toFlex(d: Digest): Flex {
     body.push({ type: "separator", margin: "lg", color: LINE_COLOR });
     body.push(text(sec.title, { size: "sm", weight: "bold", color: BRASS, margin: "lg" }));
     body.push({ type: "box", layout: "vertical", margin: "sm", spacing: "sm", contents: sec.rows.map(row) });
-    if (sec.more > 0) body.push(text(`และอีก ${sec.more} รายการ`, { size: "xs", color: HEX.muted, margin: "sm" }));
+    if (sec.more > 0) body.push(text(t("และอีก {n} รายการ", { n: sec.more }), { size: "xs", color: HEX.muted, margin: "sm" }));
   }
 
   const bubble: Flex = {
@@ -101,7 +106,7 @@ export function toFlex(d: Digest): Flex {
           style: "primary",
           color: BRASS,
           height: "sm",
-          action: { type: "uri", label: "เปิด Dashboard", uri: d.url },
+          action: { type: "uri", label: t("เปิด Dashboard"), uri: d.url },
         },
       ],
     };
@@ -115,6 +120,7 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export function toEmail(d: Digest): { subject: string; html: string; text: string } {
+  const t = makeT(d.lang);
   const td = "padding:6px 0;border-bottom:1px solid " + LINE_COLOR;
   const sections = d.sections
     .map(
@@ -128,11 +134,11 @@ export function toEmail(d: Digest): { subject: string; html: string; text: strin
           )
           .join("")}
       </table>
-      ${sec.more > 0 ? `<p style="margin:6px 0 0;font-size:13px;color:${HEX.muted}">และอีก ${sec.more} รายการ</p>` : ""}`,
+      ${sec.more > 0 ? `<p style="margin:6px 0 0;font-size:13px;color:${HEX.muted}">${esc(t("และอีก {n} รายการ", { n: sec.more }))}</p>` : ""}`,
     )
     .join("");
 
-  const html = `<!doctype html><html lang="th"><body style="margin:0;background:#f3f5f8;font-family:'IBM Plex Sans Thai','Noto Sans Thai',Tahoma,sans-serif;color:${INK}">
+  const html = `<!doctype html><html lang="${d.lang}"><body style="margin:0;background:#f3f5f8;font-family:'IBM Plex Sans Thai','Noto Sans Thai',Tahoma,sans-serif;color:${INK}">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:24px 12px">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
     <tr><td style="background:${NAVY};padding:20px 24px">
@@ -152,12 +158,12 @@ export function toEmail(d: Digest): { subject: string; html: string; text: strin
       ${sections}
       ${
         d.url
-          ? `<p style="margin:28px 0 4px"><a href="${esc(d.url)}" style="display:inline-block;background:${BRASS};color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px">เปิด Dashboard</a></p>`
+          ? `<p style="margin:28px 0 4px"><a href="${esc(d.url)}" style="display:inline-block;background:${BRASS};color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px">${esc(t("เปิด Dashboard"))}</a></p>`
           : ""
       }
     </td></tr>
   </table>
-  <p style="font-size:12px;color:${HEX.muted}">ส่งอัตโนมัติจาก SOP-Stock</p>
+  <p style="font-size:12px;color:${HEX.muted}">${esc(t("ส่งอัตโนมัติจาก SOP-Stock"))}</p>
   </td></tr></table></body></html>`;
 
   const plain = [
@@ -171,9 +177,9 @@ export function toEmail(d: Digest): { subject: string; html: string; text: strin
       "",
       sec.title,
       ...sec.rows.map((r) => `- ${r.left}: ${r.right}`),
-      ...(sec.more > 0 ? [`และอีก ${sec.more} รายการ`] : []),
+      ...(sec.more > 0 ? [t("และอีก {n} รายการ", { n: sec.more })] : []),
     ]),
-    ...(d.url ? ["", `เปิด Dashboard: ${d.url}`] : []),
+    ...(d.url ? ["", `${t("เปิด Dashboard")}: ${d.url}`] : []),
   ].join("\n");
 
   return { subject: `${d.title} · ${d.subtitle}`, html, text: plain };

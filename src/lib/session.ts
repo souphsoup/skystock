@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { cache } from "react";
 import { getDb } from "./db";
 import type { Role } from "./types";
-import { LANG_COOKIE, type Lang, type Params } from "@/i18n";
+import { LANG_COOKIE, tk, type Lang, type Params } from "@/i18n";
 
 export const SESSION_COOKIE = "sop_session";
 const SESSION_HOURS = 12;
@@ -53,13 +53,13 @@ export async function login(
     lang: Lang;
   }>(`select * from users where login = $1`, [loginName.trim().toLowerCase()]);
 
-  const fail = { ok: false as const, error: "ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง" };
+  const fail = { ok: false as const, error: tk("ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง") };
   if (!u || !u.active) {
     await bcrypt.compare(pin, dummyHash()); // keep timing similar to a real check
     return fail;
   }
   if (u.locked_until && new Date(u.locked_until) > new Date()) {
-    return { ok: false, error: "ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน {n} นาที", params: { n: LOCK_MINUTES } };
+    return { ok: false, error: tk("ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน {n} นาที"), params: { n: LOCK_MINUTES } };
   }
   if (!(await bcrypt.compare(pin, u.pin_hash))) {
     await db.query(

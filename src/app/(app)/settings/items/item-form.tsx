@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import type { Catalog, CatalogItem } from "@/lib/settings";
 import { LEVEL_LABEL, categoryPath, flattenTree } from "@/lib/catalog-tree";
 import { saveItemAction } from "@/app/actions/settings";
+import { approveProposalAction } from "@/app/actions/proposals";
 import { Stepper } from "@/components/stepper";
 import { IconBack } from "@/components/icons";
+import { useT } from "@/i18n/client";
 
 function Chips<T extends string | number>({
   options,
@@ -40,25 +42,38 @@ function Chips<T extends string | number>({
   );
 }
 
+/** Approving a staff proposal: the same form, prefilled, creating the item through the proposal. */
+export interface ApproveMode {
+  proposalId: number;
+  initial: Pick<CatalogItem, "nameTh" | "nameEn" | "unit" | "locationId">;
+  intro: React.ReactNode;
+  footer: React.ReactNode;
+}
+
 export function ItemForm({
   catalog,
   item,
   defaultCategoryId,
+  approve,
 }: {
   catalog: Catalog;
   item: CatalogItem | null;
   defaultCategoryId: number | null;
+  approve?: ApproveMode;
 }) {
   const router = useRouter();
+  const { t } = useT();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const [categoryId, setCategoryId] = useState<number | null>(defaultCategoryId);
-  const [nameTh, setNameTh] = useState(item?.nameTh ?? "");
-  const [nameEn, setNameEn] = useState(item?.nameEn ?? "");
-  const [unit, setUnit] = useState(item?.unit ?? "");
+  const init = item ?? approve?.initial;
+  const back = approve ? "/review" : "/settings";
+  const [nameTh, setNameTh] = useState(init?.nameTh ?? "");
+  const [nameEn, setNameEn] = useState(init?.nameEn ?? "");
+  const [unit, setUnit] = useState(init?.unit ?? "");
   const [customUnit, setCustomUnit] = useState(false);
-  const [locationId, setLocationId] = useState<number>(item?.locationId ?? catalog.locations[0]?.id ?? 0);
+  const [locationId, setLocationId] = useState<number>(init?.locationId ?? catalog.locations[0]?.id ?? 0);
   const [par, setPar] = useState(item?.par ?? 0);
   const [cost, setCost] = useState(item ? String(item.unitCost) : "");
   const [blind, setBlind] = useState(item?.blind ?? false);
@@ -71,18 +86,18 @@ export function ItemForm({
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    const input = { categoryId, locationId, nameTh, nameEn, unit, unitCost: costNum, par, blind, active };
     start(async () => {
-      const r = await saveItemAction(item?.id ?? null, {
-        categoryId,
-        locationId,
-        nameTh,
-        nameEn,
-        unit,
-        unitCost: costNum,
-        par,
-        blind,
-        active,
-      });
+      if (approve) {
+        const r = await approveProposalAction(approve.proposalId, input);
+        setError(r.error);
+        if (!r.error) {
+          router.push(`/review?added=${encodeURIComponent(nameEn.trim() || nameTh.trim())}&counted=${r.counted}`);
+          router.refresh();
+        }
+        return;
+      }
+      const r = await saveItemAction(item?.id ?? null, input);
       setError(r.error);
       if (!r.error) {
         router.push("/settings");
@@ -93,27 +108,30 @@ export function ItemForm({
 
   return (
     <main className="mx-auto max-w-xl px-4 pt-4">
-      <Link href="/settings" className="btn btn-ghost -ml-3 mb-1 min-h-11 px-2 text-sm text-muted">
-        <IconBack width={18} height={18} /> ประเภทวัตถุดิบ
+      <Link href={back} className="btn btn-ghost -ml-3 mb-1 min-h-11 px-2 text-sm text-muted">
+        <IconBack width={18} height={18} /> {approve ? t("ตรวจและอนุมัติยอด") : t("ประเภทวัตถุดิบ")}
       </Link>
       <form onSubmit={submit} className="grid gap-5">
         <header>
-          <h1 className="text-2xl font-bold">{item ? "แก้ไขรายการ" : "เพิ่มรายการใหม่"}</h1>
-          <p className="text-muted">อยู่ใน {path.length ? path.join(" › ") : "ยังไม่มีหมวด"}</p>
+          <h1 className="text-2xl font-bold">
+            {approve ? t("อนุมัติรายการที่เสนอ") : item ? t("แก้ไขรายการ") : t("เพิ่มรายการใหม่")}
+          </h1>
+          <p className="text-muted">{t("อยู่ใน {path}", { path: path.length ? path.join(" › ") : t("ยังไม่มีหมวด") })}</p>
         </header>
+        {approve?.intro}
 
         <label className="grid gap-1.5">
-          <span className="font-semibold">หมวด › ชนิด › ส่วน</span>
+          <span className="font-semibold">{t("หมวด › ชนิด › ส่วน")}</span>
           <select
             className="input"
             value={categoryId ?? ""}
             onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
           >
-            <option value="">— ไม่มีหมวด —</option>
+            <option value="">{t("— ไม่มีหมวด —")}</option>
             {tree.map((c) => (
               <option key={c.id} value={c.id}>
                 {"   ".repeat(c.level - 1)}
-                {c.name} ({LEVEL_LABEL[c.level]})
+                {c.name} ({t(LEVEL_LABEL[c.level])})
               </option>
             ))}
           </select>
@@ -121,21 +139,21 @@ export function ItemForm({
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1.5">
-            <span className="font-semibold">ชื่อไทย</span>
-            <input className="input" value={nameTh} onChange={(e) => setNameTh(e.target.value)} placeholder="เช่น สันใน" required />
+            <span className="font-semibold">{t("ชื่อไทย")}</span>
+            <input className="input" value={nameTh} onChange={(e) => setNameTh(e.target.value)} placeholder={t("เช่น สันใน")} required />
           </label>
           <label className="grid gap-1.5">
             <span className="font-semibold">
-              ชื่ออังกฤษ <span className="font-normal text-muted">(ไม่บังคับ)</span>
+              {t("ชื่ออังกฤษ")} <span className="font-normal text-muted">{t("(ไม่บังคับ)")}</span>
             </span>
             <input className="input" value={nameEn} onChange={(e) => setNameEn(e.target.value)} placeholder="e.g. Tenderloin" />
           </label>
         </div>
 
         <fieldset className="grid gap-2">
-          <legend className="mb-2 font-semibold">หน่วยนับ</legend>
+          <legend className="mb-2 font-semibold">{t("หน่วยนับ")}</legend>
           <Chips
-            label="หน่วยนับ"
+            label={t("หน่วยนับ")}
             value={customUnit ? "__custom" : unit}
             onChange={(v) => {
               if (v === "__custom") {
@@ -146,7 +164,7 @@ export function ItemForm({
                 setUnit(v);
               }
             }}
-            options={[...catalog.units.map((u) => ({ value: u, label: u })), { value: "__custom", label: "อื่นๆ…" }]}
+            options={[...catalog.units.map((u) => ({ value: u, label: u })), { value: "__custom", label: t("อื่นๆ…") }]}
           />
           {customUnit && (
             <input
@@ -154,34 +172,34 @@ export function ItemForm({
               autoFocus
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              placeholder="พิมพ์หน่วย เช่น กล่อง"
-              aria-label="หน่วยนับอื่น"
+              placeholder={t("พิมพ์หน่วย เช่น กล่อง")}
+              aria-label={t("หน่วยนับอื่น")}
             />
           )}
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 font-semibold">เก็บที่</legend>
+          <legend className="mb-2 font-semibold">{t("เก็บที่")}</legend>
           <Chips
-            label="จุดเก็บ"
+            label={t("จุดเก็บ")}
             value={locationId}
             onChange={setLocationId}
             options={catalog.locations.map((l) => ({ value: l.id, label: l.name }))}
           />
           {item && locationId !== item.locationId && (
-            <p className="mt-2 text-sm text-warn">ย้ายจุดเก็บ: รายการนี้จะไปอยู่ท้ายใบนับของจุดใหม่ตั้งแต่รอบนับที่ยังไม่ส่ง</p>
+            <p className="mt-2 text-sm text-warn">{t("ย้ายจุดเก็บ: รายการนี้จะไปอยู่ท้ายใบนับของจุดใหม่ตั้งแต่รอบนับที่ยังไม่ส่ง")}</p>
           )}
         </fieldset>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5">
-            <span className="font-semibold">ขั้นต่ำ (Par)</span>
-            <span className="text-sm text-muted">ต่ำกว่านี้แจ้งเตือน</span>
-            <Stepper label="ขั้นต่ำ (Par)" value={par} onChange={setPar} />
+            <span className="font-semibold">{t("ขั้นต่ำ (Par)")}</span>
+            <span className="text-sm text-muted">{t("ต่ำกว่านี้แจ้งเตือน")}</span>
+            <Stepper label={t("ขั้นต่ำ (Par)")} value={par} onChange={setPar} />
           </div>
           <label className="grid content-start gap-1.5">
-            <span className="font-semibold">ราคาทุนต่อหน่วย (฿)</span>
-            <span className="text-sm text-muted">ใช้คิดมูลค่าคงคลังและส่วนต่าง</span>
+            <span className="font-semibold">{t("ราคาทุนต่อหน่วย (฿)")}</span>
+            <span className="text-sm text-muted">{t("ใช้คิดมูลค่าคงคลังและส่วนต่าง")}</span>
             <input
               className="input num"
               inputMode="decimal"
@@ -196,7 +214,7 @@ export function ItemForm({
           <input type="checkbox" className="mt-1 h-5 w-5 accent-[var(--accent)]" checked={blind} onChange={(e) => setBlind(e.target.checked)} />
           <span>
             <b className="block">Blind count</b>
-            <span className="text-sm text-muted">ซ่อนยอดที่ระบบคิดไว้ ให้พนักงานนับของจริงทุกครั้ง เหมาะกับของราคาสูง</span>
+            <span className="text-sm text-muted">{t("ซ่อนยอดที่ระบบคิดไว้ ให้พนักงานนับของจริงทุกครั้ง เหมาะกับของราคาสูง")}</span>
           </span>
         </label>
 
@@ -204,8 +222,8 @@ export function ItemForm({
           <label className="card flex items-start gap-3 p-4">
             <input type="checkbox" className="mt-1 h-5 w-5 accent-[var(--accent)]" checked={active} onChange={(e) => setActive(e.target.checked)} />
             <span>
-              <b className="block">ใช้งานอยู่</b>
-              <span className="text-sm text-muted">ปิดแล้วรายการจะไม่อยู่ในใบนับ แต่ประวัติการนับและรายงานเดิมยังอยู่ครบ</span>
+              <b className="block">{t("ใช้งานอยู่")}</b>
+              <span className="text-sm text-muted">{t("ปิดแล้วรายการจะไม่อยู่ในใบนับ แต่ประวัติการนับและรายงานเดิมยังอยู่ครบ")}</span>
             </span>
           </label>
         )}
@@ -217,14 +235,15 @@ export function ItemForm({
         )}
 
         <div className="grid grid-cols-[auto_1fr] gap-2 pb-4">
-          <Link href="/settings" className="btn">
-            ยกเลิก
+          <Link href={back} className="btn">
+            {t("ยกเลิก")}
           </Link>
           <button type="submit" className="btn btn-primary text-lg" disabled={pending || !valid}>
-            {pending ? "กำลังบันทึก…" : "บันทึก"}
+            {pending ? t("กำลังบันทึก…") : approve ? t("อนุมัติและเพิ่มในใบนับ") : t("บันทึก")}
           </button>
         </div>
       </form>
+      {approve?.footer}
     </main>
   );
 }

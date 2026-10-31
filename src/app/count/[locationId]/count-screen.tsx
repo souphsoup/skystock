@@ -10,6 +10,8 @@ import { SyncBadge } from "@/components/sync-badge";
 import { Stepper } from "@/components/stepper";
 import { fmtQty } from "@/components/status";
 import { IconBack, IconSearch } from "@/components/icons";
+import { useT } from "@/i18n/client";
+import { ProposeItem } from "./propose-item";
 
 export function CountScreen({ initial }: { initial: Sheet }) {
   const [sheet, setSheet] = useState<Sheet>(initial);
@@ -19,6 +21,7 @@ export function CountScreen({ initial }: { initial: Sheet }) {
   const [category, setCategory] = useState<string>("all");
   const [query, setQuery] = useState("");
   const sync = useSyncState();
+  const { t } = useT();
   const cardRef = useRef<HTMLElement>(null);
   const countId = sheet.countId;
 
@@ -64,10 +67,10 @@ export function CountScreen({ initial }: { initial: Sheet }) {
         setSheet(s);
       } catch {}
     };
-    const t = setInterval(refresh, 60_000);
+    const timer = setInterval(refresh, 60_000);
     document.addEventListener("visibilitychange", refresh);
     return () => {
-      clearInterval(t);
+      clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [initial.locationId]);
@@ -148,7 +151,7 @@ export function CountScreen({ initial }: { initial: Sheet }) {
     <div className="mx-auto max-w-xl pb-32">
       <header className="sticky top-0 z-10 border-b border-line bg-paper/95 px-4 pt-3 pb-3 backdrop-blur">
         <div className="flex items-center justify-between gap-2">
-          <Link href="/" className="btn btn-ghost -ml-3 min-h-11 px-2" aria-label="กลับหน้าแรก">
+          <Link href="/" className="btn btn-ghost -ml-3 min-h-11 px-2" aria-label={t("กลับหน้าแรก")}>
             <IconBack />
           </Link>
           <h1 className="flex-1 truncate text-lg font-bold">
@@ -159,9 +162,9 @@ export function CountScreen({ initial }: { initial: Sheet }) {
         {!readOnly && (
           <div className="mt-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted">{isRecount ? "นับซ้ำแล้ว" : "นับแล้ว"}</span>
+              <span className="text-muted">{isRecount ? t("นับซ้ำแล้ว") : t("นับแล้ว")}</span>
               <span className="num font-semibold">
-                {done} จาก {editable.length}
+                {t("{done} จาก {total}", { done, total: editable.length })}
               </span>
             </div>
             <div className="mt-1 h-2 overflow-hidden rounded-full bg-line" aria-hidden>
@@ -174,31 +177,33 @@ export function CountScreen({ initial }: { initial: Sheet }) {
       <div className="px-4 pt-3">
         {staleDay && (
           <p className="mb-3 rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn">
-            ข้อมูลนี้เป็นของวันที่ {fmtDateSlash(sheet.businessDate)} เปิดหน้านี้ใหม่เมื่อมีสัญญาณเพื่อเริ่มรอบนับวันนี้
+            {t("ข้อมูลนี้เป็นของวันที่ {date} เปิดหน้านี้ใหม่เมื่อมีสัญญาณเพื่อเริ่มรอบนับวันนี้", {
+              date: fmtDateSlash(sheet.businessDate),
+            })}
           </p>
         )}
         {sync.error && (
           <div role="alert" className="mb-3 flex items-start justify-between gap-2 rounded-xl bg-bad-soft px-3 py-2 text-sm text-bad">
-            <span>{sync.error}</span>
+            <span>{t(sync.error.text, sync.error.params)}</span>
             <button type="button" className="font-semibold underline" onClick={clearSyncError}>
-              ปิด
+              {t("ปิด")}
             </button>
           </div>
         )}
         {isRecount && (
           <p className="mb-3 rounded-xl border border-bad bg-bad-soft px-3 py-2 font-semibold text-bad">
-            ↺ หัวหน้าขอให้นับซ้ำ {editable.length} รายการ นับของจริงแล้วส่งอีกครั้ง
+            ↺ {t("หัวหน้าขอให้นับซ้ำ {n} รายการ นับของจริงแล้วส่งอีกครั้ง", { n: editable.length })}
           </p>
         )}
         {sheet.status === "submitted" && (
-          <p className="mb-3 rounded-xl bg-sky-soft px-3 py-2 font-semibold text-sky">◔ ส่งยอดแล้ว รอหัวหน้าตรวจ</p>
+          <p className="mb-3 rounded-xl bg-sky-soft px-3 py-2 font-semibold text-sky">◔ {t("ส่งยอดแล้ว รอหัวหน้าตรวจ")}</p>
         )}
         {sheet.status === "approved" && (
-          <p className="mb-3 rounded-xl bg-ok-soft px-3 py-2 font-semibold text-ok">✓ หัวหน้าอนุมัติยอดรอบนี้แล้ว</p>
+          <p className="mb-3 rounded-xl bg-ok-soft px-3 py-2 font-semibold text-ok">✓ {t("หัวหน้าอนุมัติยอดรอบนี้แล้ว")}</p>
         )}
 
         {!isRecount && categories.length > 1 && (
-          <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1" role="tablist" aria-label="หมวด">
+          <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1" role="tablist" aria-label={t("หมวด")}>
             {["all", ...categories].map((c) => (
               <button
                 key={c}
@@ -210,7 +215,7 @@ export function CountScreen({ initial }: { initial: Sheet }) {
                   category === c ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-muted"
                 }`}
               >
-                {c === "all" ? "ทั้งหมด" : c}
+                {c === "all" ? t("ทั้งหมด") : c}
               </button>
             ))}
           </div>
@@ -233,14 +238,14 @@ export function CountScreen({ initial }: { initial: Sheet }) {
           <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" width={18} height={18} />
           <input
             className="input pl-10"
-            placeholder="ค้นหา ไทย / English"
+            placeholder={t("ค้นหา ไทย / English")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            aria-label="ค้นหารายการ"
+            aria-label={t("ค้นหารายการ")}
           />
         </label>
 
-        <ul className="card divide-y divide-line" aria-label="รายการในใบนับ">
+        <ul className="card divide-y divide-line" aria-label={t("รายการในใบนับ")}>
           {visible.map((l) => (
             <li key={l.itemId}>
               <button
@@ -266,8 +271,21 @@ export function CountScreen({ initial }: { initial: Sheet }) {
               </button>
             </li>
           ))}
-          {visible.length === 0 && <li className="px-4 py-6 text-center text-muted">ไม่พบรายการ</li>}
+          {visible.length === 0 && <li className="px-4 py-6 text-center text-muted">{t("ไม่พบรายการ")}</li>}
         </ul>
+
+        <ProposeItem
+          locationId={sheet.locationId}
+          lines={sheet.lines}
+          proposals={sheet.proposals ?? []}
+          query={query}
+          onSent={() => setQuery("")}
+          onPick={(id) => {
+            setQuery("");
+            setSelectedId(id);
+            cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+        />
       </div>
 
       {!readOnly && (
@@ -275,15 +293,15 @@ export function CountScreen({ initial }: { initial: Sheet }) {
           <div className="mx-auto max-w-xl px-4 py-3">
             {submitQueued ? (
               <p className="text-center font-semibold text-sky" role="status">
-                {sync.online ? "กำลังส่งยอด…" : "ส่งยอดไว้แล้ว ระบบจะส่งให้เองเมื่อกลับมาออนไลน์"}
+                {sync.online ? t("กำลังส่งยอด…") : t("ส่งยอดไว้แล้ว ระบบจะส่งให้เองเมื่อกลับมาออนไลน์")}
               </p>
             ) : (
               <button type="button" className="btn btn-primary w-full text-lg" disabled={done < editable.length} onClick={submit}>
                 {done < editable.length
-                  ? `ยังเหลือ ${editable.length - done} รายการ`
+                  ? t("ยังเหลือ {n} รายการ", { n: editable.length - done })
                   : isRecount
-                    ? "ส่งยอดนับซ้ำ"
-                    : "ส่งยอดให้หัวหน้าตรวจ"}
+                    ? t("ส่งยอดนับซ้ำ")
+                    : t("ส่งยอดให้หัวหน้าตรวจ")}
               </button>
             )}
           </div>
@@ -302,13 +320,14 @@ async function readOutbox(countId: number) {
 }
 
 function LineState({ line }: { line: SheetLine }) {
-  if (line.status === "recount" && line.counted === null) return <span className="pill bg-bad-soft text-bad">↺ นับซ้ำ</span>;
-  if (line.counted === null) return <span className="pill bg-sky-soft text-sky">○ ยังไม่นับ</span>;
-  if (line.counted <= 0) return <span className="pill bg-bad-soft text-bad">หมด · 0</span>;
+  const { t } = useT();
+  if (line.status === "recount" && line.counted === null) return <span className="pill bg-bad-soft text-bad">↺ {t("นับซ้ำ")}</span>;
+  if (line.counted === null) return <span className="pill bg-sky-soft text-sky">○ {t("ยังไม่นับ")}</span>;
+  if (line.counted <= 0) return <span className="pill bg-bad-soft text-bad">{t("หมด")} · 0</span>;
   const low = line.par > 0 && line.counted < line.par;
   return (
     <span className={`num shrink-0 text-lg font-semibold ${low ? "text-warn" : ""}`}>
-      {low && <span className="mr-1 text-xs font-sans">ต่ำกว่า Par</span>}
+      {low && <span className="mr-1 text-xs font-sans">{t("ต่ำกว่า Par")}</span>}
       {fmtQty(line.counted)}
     </span>
   );
@@ -325,6 +344,7 @@ function LineCard({
   onDone: (counted: number) => void;
   ref: React.Ref<HTMLElement>;
 }) {
+  const { t } = useT();
   const expected = expectedOf(line);
   // Blind count and first-ever counts have no system figure: always type the real count.
   const manualOnly = expected === null;
@@ -334,28 +354,28 @@ function LineCard({
   const validManual = Number.isFinite(parsed) && parsed >= 0;
 
   return (
-    <section ref={ref} className="card mb-4 scroll-mt-32 p-4" aria-label={`นับ ${itemLabel(line)}`}>
+    <section ref={ref} className="card mb-4 scroll-mt-32 p-4" aria-label={t("นับ {name}", { name: itemLabel(line) })}>
       {line.path.length > 0 && <p className="text-sm text-muted">{line.path.join(" › ")}</p>}
       <div className="mt-0.5 flex items-start justify-between gap-2">
         <div>
           <h2 className="text-xl font-bold">{itemLabel(line)}</h2>
           <p className="text-sm text-muted">{line.nameTh}</p>
         </div>
-        <span className="pill shrink-0 bg-sky-soft text-sky">หน่วย: {line.unit}</span>
+        <span className="pill shrink-0 bg-sky-soft text-sky">{t("หน่วย: {unit}", { unit: line.unit })}</span>
       </div>
 
       <p className="mt-3 rounded-xl bg-paper px-3 py-2 text-sm">
         {line.blind ? (
           <>
-            <b>Blind count</b> · นับของจริงแล้วกรอกยอด ระบบจะไม่แสดงยอดที่ควรเหลือ
+            <b>Blind count</b> · {t("นับของจริงแล้วกรอกยอด ระบบจะไม่แสดงยอดที่ควรเหลือ")}
           </>
         ) : line.opening === null ? (
           <>
-            <b>นับครั้งแรก</b> · ยังไม่มียอดยกมา กรอกยอดที่นับได้เป็นยอดตั้งต้น
+            <b>{t("นับครั้งแรก")}</b> · {t("ยังไม่มียอดยกมา กรอกยอดที่นับได้เป็นยอดตั้งต้น")}
           </>
         ) : (
           <>
-            ยกมาจากรอบก่อน <b className="num text-base">{fmtQty(line.opening)}</b>
+            {t("ยกมาจากรอบก่อน")} <b className="num text-base">{fmtQty(line.opening)}</b>
           </>
         )}
       </p>
@@ -363,49 +383,51 @@ function LineCard({
       <div className="mt-3 grid gap-3">
         <div className="flex items-center justify-between gap-2">
           <span>
-            <b className="block">รับเข้า</b>
+            <b className="block">{t("รับเข้า")}</b>
             <span className="text-sm text-muted">
               in
-              {line.mvIn > 0 && <span className="block text-ok">บันทึกรับ/โอนเข้า {fmtQty(line.mvIn)} · + เพิ่มเอง</span>}
+              {line.mvIn > 0 && <span className="block text-ok">{t("บันทึกรับ/โอนเข้า {n} · + เพิ่มเอง", { n: fmtQty(line.mvIn) })}</span>}
             </span>
           </span>
-          <Stepper label="รับเข้า" value={line.inQty} onChange={(inQty) => onChange({ inQty })} />
+          <Stepper label={t("รับเข้า")} value={line.inQty} onChange={(inQty) => onChange({ inQty })} />
         </div>
         <div className="flex items-center justify-between gap-2">
           <span>
-            <b className="block">เบิกออก</b>
+            <b className="block">{t("เบิกออก")}</b>
             <span className="text-sm text-muted">
               out
-              {line.mvOut > 0 && <span className="block text-sky">บันทึกเบิก/โอน/เสีย {fmtQty(line.mvOut)} · + เพิ่มเอง</span>}
+              {line.mvOut > 0 && <span className="block text-sky">{t("บันทึกเบิก/โอน/เสีย {n} · + เพิ่มเอง", { n: fmtQty(line.mvOut) })}</span>}
             </span>
           </span>
-          <Stepper label="เบิกออก" value={line.outQty} onChange={(outQty) => onChange({ outQty })} />
+          <Stepper label={t("เบิกออก")} value={line.outQty} onChange={(outQty) => onChange({ outQty })} />
         </div>
       </div>
 
       <div className="mt-4 border-t border-line pt-3">
         <div className="flex items-end justify-between gap-2">
           <span>
-            <b className="block">คงเหลือ</b>
+            <b className="block">{t("คงเหลือ")}</b>
             <span className="text-sm text-muted">total</span>
           </span>
           {expected !== null && (
             <span className="text-right">
               <span className="num block text-sm text-muted">
-                {fmtQty(line.opening)} + {fmtQty(line.mvIn + line.inQty)} − {fmtQty(line.mvOut + line.outQty)} ระบบคิดให้
+                {fmtQty(line.opening)} + {fmtQty(line.mvIn + line.inQty)} − {fmtQty(line.mvOut + line.outQty)} {t("ระบบคิดให้")}
               </span>
               <span className={`num text-3xl font-bold ${expected < 0 ? "text-bad" : ""}`}>{fmtQty(expected)}</span>
             </span>
           )}
         </div>
         {expected !== null && expected < 0 && (
-          <p className="mt-2 text-sm text-bad">เบิกออกมากกว่าของที่มี ตรวจตัวเลข in / out อีกครั้ง</p>
+          <p className="mt-2 text-sm text-bad">{t("เบิกออกมากกว่าของที่มี ตรวจตัวเลข in / out อีกครั้ง")}</p>
         )}
 
         {line.counted !== null && !editing && (
           <p className="mt-2 text-sm font-semibold text-ok" role="status">
-            ✓ บันทึกแล้ว {fmtQty(line.counted)} {line.unit}
-            {expected !== null && line.counted !== expected && ` (ต่างจากที่ระบบคิด ${fmtQty(line.counted - expected)})`}
+            ✓ {t("บันทึกแล้ว {qty} {unit}", { qty: fmtQty(line.counted), unit: line.unit })}
+            {expected !== null &&
+              line.counted !== expected &&
+              ` ${t("(ต่างจากที่ระบบคิด {diff})", { diff: fmtQty(line.counted - expected) })}`}
           </p>
         )}
 
@@ -414,8 +436,8 @@ function LineCard({
             <input
               className="input num flex-1 text-xl font-semibold"
               inputMode="decimal"
-              aria-label="ยอดที่นับได้จริง"
-              placeholder="นับได้จริง"
+              aria-label={t("ยอดที่นับได้จริง")}
+              placeholder={t("นับได้จริง")}
               value={text}
               autoFocus={!manualOnly}
               onFocus={(e) => e.currentTarget.select()}
@@ -426,7 +448,7 @@ function LineCard({
             />
             {!manualOnly && (
               <button type="button" className="btn" onClick={() => setEditing(false)}>
-                ยกเลิก
+                {t("ยกเลิก")}
               </button>
             )}
             <button
@@ -435,7 +457,7 @@ function LineCard({
               disabled={!validManual}
               onClick={() => onDone(Math.round(parsed * 100) / 100)}
             >
-              บันทึก
+              {t("บันทึก")}
             </button>
           </div>
         ) : (
@@ -448,7 +470,7 @@ function LineCard({
                 setEditing(true);
               }}
             >
-              แก้ยอด
+              {t("แก้ยอด")}
             </button>
             <button
               type="button"
@@ -456,7 +478,7 @@ function LineCard({
               disabled={expected === null || expected < 0}
               onClick={() => expected !== null && onDone(expected)}
             >
-              ✓ ตรงกับของจริง
+              ✓ {t("ตรงกับของจริง")}
             </button>
           </div>
         )}

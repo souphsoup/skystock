@@ -2,6 +2,7 @@
 
 import { useActionState, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { loginAction } from "@/app/actions/auth";
+import { useT } from "@/i18n/client";
 
 const RECENT_KEY = "sop-recent-logins";
 const PIN_LENGTH = 6;
@@ -19,6 +20,7 @@ function parseRecent(raw: string): string[] {
 export function LoginForm() {
   const [login, setLogin] = useState("");
   const [pin, setPin] = useState("");
+  const { t } = useT();
   const [state, action, pending] = useActionState(async (prev: { error: string | null }, form: FormData) => {
     const res = await loginAction(prev, form);
     if (res.error) setPin("");
@@ -47,7 +49,7 @@ export function LoginForm() {
   return (
     <form ref={formRef} action={action} className="card flex flex-col gap-4 p-5">
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-muted">ชื่อผู้ใช้</span>
+        <span className="text-sm font-medium text-muted">{t("ชื่อผู้ใช้")}</span>
         <input
           name="login"
           className="input"
@@ -56,12 +58,12 @@ export function LoginForm() {
           autoComplete="username"
           value={login}
           onChange={(e) => setLogin(e.target.value)}
-          placeholder="เช่น ton"
+          placeholder={t("เช่น ton")}
         />
       </label>
 
       {recent.length > 0 && (
-        <div className="flex flex-wrap gap-2" aria-label="ผู้ใช้ล่าสุดในเครื่องนี้">
+        <div className="flex flex-wrap gap-2" aria-label={t("ผู้ใช้ล่าสุดในเครื่องนี้")}>
           {recent.map((r) => (
             <button
               key={r}
@@ -80,8 +82,8 @@ export function LoginForm() {
 
       <input type="hidden" name="pin" value={pin} />
       <div>
-        <span className="text-sm font-medium text-muted">PIN 6 หลัก</span>
-        <div className="mt-2 flex justify-center gap-3" aria-live="polite" aria-label={`ใส่แล้ว ${pin.length} จาก ${PIN_LENGTH} หลัก`}>
+        <span className="text-sm font-medium text-muted">{t("PIN 6 หลัก")}</span>
+        <div className="mt-2 flex justify-center gap-3" aria-live="polite" aria-label={t("ใส่แล้ว {n} จาก {total} หลัก", { n: pin.length, total: PIN_LENGTH })}>
           {Array.from({ length: PIN_LENGTH }, (_, i) => (
             <span
               key={i}
@@ -98,7 +100,7 @@ export function LoginForm() {
           </button>
         ))}
         <button type="button" className="btn btn-ghost text-sm" onClick={() => setPin("")} disabled={pending}>
-          ล้าง
+          {t("ล้าง")}
         </button>
         <button type="button" className="btn num text-xl" onClick={() => press("0")} disabled={pending}>
           0
@@ -108,7 +110,7 @@ export function LoginForm() {
           className="btn btn-ghost text-sm"
           onClick={() => setPin(pin.slice(0, -1))}
           disabled={pending}
-          aria-label="ลบตัวสุดท้าย"
+          aria-label={t("ลบตัวสุดท้าย")}
         >
           ⌫
         </button>
@@ -120,7 +122,7 @@ export function LoginForm() {
         </p>
       )}
       <button type="submit" className="btn btn-primary" disabled={pending || !login.trim() || pin.length !== PIN_LENGTH}>
-        {pending ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
+        {pending ? t("กำลังเข้าสู่ระบบ…") : t("เข้าสู่ระบบ")}
       </button>
     </form>
   );

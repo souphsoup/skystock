@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { HttpError, requireApiUser } from "@/lib/session";
+import { tk } from "@/i18n";
+import { errorMessage } from "@/i18n/server";
 import { voidMovement } from "@/lib/movements";
 
 export async function voidMovementAction(id: number, reason: string): Promise<{ error: string | null }> {
@@ -11,8 +13,7 @@ export async function voidMovementAction(id: number, reason: string): Promise<{ 
     revalidatePath("/", "layout");
     return { error: null };
   } catch (e) {
-    if (e instanceof HttpError) return { error: e.message };
-    console.error(e);
-    return { error: "ยกเลิกไม่สำเร็จ ลองใหม่อีกครั้ง" };
+    if (!(e instanceof HttpError)) console.error(e);
+    return { error: await errorMessage(e, tk("ยกเลิกไม่สำเร็จ ลองใหม่อีกครั้ง")) };
   }
 }

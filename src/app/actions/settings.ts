@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { HttpError, requireApiUser, type User } from "@/lib/session";
 import * as settings from "@/lib/settings";
 import { can, type Role } from "@/lib/types";
+import { errorMessage } from "@/i18n/server";
 
 export type ActionResult = { error: string | null; id?: number };
 
@@ -17,9 +18,8 @@ async function run(
     revalidatePath("/", "layout");
     return { error: null, id: id ?? undefined };
   } catch (e) {
-    if (e instanceof HttpError) return { error: e.message };
-    console.error(e);
-    return { error: "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง" };
+    if (!(e instanceof HttpError)) console.error(e);
+    return { error: await errorMessage(e) };
   }
 }
 

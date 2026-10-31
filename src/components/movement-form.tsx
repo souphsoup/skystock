@@ -10,6 +10,8 @@ import type { PickItem } from "@/lib/movement-page";
 import { SyncBadge } from "./sync-badge";
 import { Stepper } from "./stepper";
 import { IconBack, IconSearch } from "./icons";
+import { tk } from "@/i18n";
+import { useT } from "@/i18n/client";
 
 interface Loc {
   id: number;
@@ -49,10 +51,10 @@ function Chips<T extends string | number>({
 }
 
 const SUBMIT_LABEL: Record<MoveKind, string> = {
-  receive: "บันทึกรับของ",
-  issue: "บันทึกเบิก",
-  transfer: "บันทึกโอน",
-  waste: "บันทึกของเสีย",
+  receive: tk("บันทึกรับของ"),
+  issue: tk("บันทึกเบิก"),
+  transfer: tk("บันทึกโอน"),
+  waste: tk("บันทึกของเสีย"),
 };
 
 export function MovementForm({
@@ -65,6 +67,7 @@ export function MovementForm({
   items: PickItem[];
 }) {
   const sync = useSyncState();
+  const { t } = useT();
   useEffect(() => startSync(), []);
 
   const withItems = locations.filter((l) => items.some((i) => i.locationId === l.id));
@@ -126,7 +129,7 @@ export function MovementForm({
     setBusy(true);
     const clientId = crypto.randomUUID();
     const locName = locations.find((l) => l.id === locationId)?.name ?? "";
-    const label = `${KIND_LABEL[kind]} ${lines.size} รายการ (${locName})`;
+    const label = t("{kind} {n} รายการ ({location})", { kind: t(KIND_LABEL[kind]), n: lines.size, location: locName });
     await localDb.moves.put({
       clientId,
       label,
@@ -144,7 +147,11 @@ export function MovementForm({
       },
     });
     scheduleSync(0);
-    setSaved(navigator.onLine ? `${label} บันทึกแล้ว` : `${label} บันทึกในเครื่องแล้ว จะส่งให้เองเมื่อมีสัญญาณ`);
+    setSaved(
+      navigator.onLine
+        ? t("{label} บันทึกแล้ว", { label })
+        : t("{label} บันทึกในเครื่องแล้ว จะส่งให้เองเมื่อมีสัญญาณ", { label }),
+    );
     setLines(new Map());
     setSupplier("");
     setNote("");
@@ -156,13 +163,13 @@ export function MovementForm({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const title = kinds.length > 1 ? "เบิก / โอน" : KIND_LABEL[kind];
+  const title = kinds.length > 1 ? t("เบิก / โอน") : t(KIND_LABEL[kind]);
 
   return (
     <main className="mx-auto max-w-xl px-4 pt-4 pb-40">
       <header className="mb-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
-          <Link href="/" className="btn btn-ghost -ml-3 min-h-11 px-2" aria-label="กลับหน้าแรก">
+          <Link href="/" className="btn btn-ghost -ml-3 min-h-11 px-2" aria-label={t("กลับหน้าแรก")}>
             <IconBack />
           </Link>
           <h1 className="text-2xl font-bold">{title}</h1>
@@ -174,15 +181,15 @@ export function MovementForm({
         <p role="status" className="mb-4 flex items-start justify-between gap-2 rounded-xl bg-ok-soft px-3 py-2 font-semibold text-ok">
           <span>✓ {saved}</span>
           <Link href="/movements" className="shrink-0 text-sm underline">
-            ดูประวัติ
+            {t("ดูประวัติ")}
           </Link>
         </p>
       )}
       {sync.error && (
         <div role="alert" className="mb-4 flex items-start justify-between gap-2 rounded-xl bg-bad-soft px-3 py-2 text-sm text-bad">
-          <span>{sync.error}</span>
+          <span>{t(sync.error.text, sync.error.params)}</span>
           <button type="button" className="font-semibold underline" onClick={clearSyncError}>
-            ปิด
+            {t("ปิด")}
           </button>
         </div>
       )}
@@ -199,40 +206,40 @@ export function MovementForm({
                 onClick={() => setKind(k)}
                 className={`min-h-11 rounded-lg font-semibold ${kind === k ? "bg-accent text-accent-ink" : "text-muted"}`}
               >
-                {KIND_LABEL[k]}
+                {t(KIND_LABEL[k])}
               </button>
             ))}
           </div>
         )}
 
         <fieldset>
-          <legend className="mb-2 font-semibold">{kind === "receive" ? "เก็บที่" : kind === "transfer" ? "โอนจาก" : "จาก"}</legend>
-          <Chips label="จุดเก็บ" value={locationId} onChange={changeLocation} options={withItems.map((l) => ({ value: l.id, label: l.name }))} />
+          <legend className="mb-2 font-semibold">{kind === "receive" ? t("เก็บที่") : kind === "transfer" ? t("โอนจาก") : t("จาก")}</legend>
+          <Chips label={t("จุดเก็บ")} value={locationId} onChange={changeLocation} options={withItems.map((l) => ({ value: l.id, label: l.name }))} />
         </fieldset>
 
         {kind === "transfer" && (
           <fieldset>
-            <legend className="mb-2 font-semibold">ไปที่</legend>
+            <legend className="mb-2 font-semibold">{t("ไปที่")}</legend>
             <Chips
-              label="จุดปลายทาง"
+              label={t("จุดปลายทาง")}
               value={toLocationId}
               onChange={setToLocationId}
               options={locations.map((l) => ({ value: l.id, label: l.name, disabled: l.id === locationId }))}
             />
-            <p className="mt-2 text-sm text-muted">ถ้าปลายทางยังไม่มีรายการนี้ ระบบจะเพิ่มให้เอง (Par เริ่มที่ 0)</p>
+            <p className="mt-2 text-sm text-muted">{t("ถ้าปลายทางยังไม่มีรายการนี้ ระบบจะเพิ่มให้เอง (Par เริ่มที่ 0)")}</p>
           </fieldset>
         )}
 
-        {kind === "issue" && <p className="-mt-2 text-sm text-muted">เบิกของออกไปใช้ในครัวหรือบาร์ ยอดจะไปอยู่ช่อง out ของใบนับ</p>}
+        {kind === "issue" && <p className="-mt-2 text-sm text-muted">{t("เบิกของออกไปใช้ในครัวหรือบาร์ ยอดจะไปอยู่ช่อง out ของใบนับ")}</p>}
 
         {kind === "waste" && (
           <fieldset className="grid gap-2">
-            <legend className="mb-2 font-semibold">สาเหตุ</legend>
+            <legend className="mb-2 font-semibold">{t("สาเหตุ")}</legend>
             <Chips
-              label="สาเหตุ"
+              label={t("สาเหตุ")}
               value={reason}
               onChange={setReason}
-              options={Object.entries(WASTE_REASONS).map(([value, label]) => ({ value, label }))}
+              options={Object.entries(WASTE_REASONS).map(([value, label]) => ({ value, label: t(label) }))}
             />
           </fieldset>
         )}
@@ -240,7 +247,7 @@ export function MovementForm({
         {(kind === "receive" || kind === "waste") && (
           <div className="grid gap-2">
             <span className="font-semibold">
-              {kind === "receive" ? "รูปใบส่งของ" : "รูปของเสีย"} <span className="font-normal text-muted">(ไม่บังคับ)</span>
+              {kind === "receive" ? t("รูปใบส่งของ") : t("รูปของเสีย")} <span className="font-normal text-muted">{t("(ไม่บังคับ)")}</span>
             </span>
             <input
               ref={fileRef}
@@ -253,9 +260,9 @@ export function MovementForm({
             {preview ? (
               <div className="flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview */}
-                <img src={preview} alt="รูปที่ถ่ายไว้" className="h-24 w-24 rounded-xl border border-line object-cover" />
+                <img src={preview} alt={t("รูปที่ถ่ายไว้")} className="h-24 w-24 rounded-xl border border-line object-cover" />
                 <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
-                  ถ่ายใหม่
+                  {t("ถ่ายใหม่")}
                 </button>
                 <button
                   type="button"
@@ -265,12 +272,12 @@ export function MovementForm({
                     setPreview(null);
                   }}
                 >
-                  ลบรูป
+                  {t("ลบรูป")}
                 </button>
               </div>
             ) : (
               <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
-                📷 ถ่ายรูป
+                📷 {t("ถ่ายรูป")}
               </button>
             )}
           </div>
@@ -279,16 +286,16 @@ export function MovementForm({
         {kind === "receive" && (
           <label className="grid gap-1.5">
             <span className="font-semibold">
-              ซัพพลายเออร์ <span className="font-normal text-muted">(ไม่บังคับ)</span>
+              {t("ซัพพลายเออร์")} <span className="font-normal text-muted">{t("(ไม่บังคับ)")}</span>
             </span>
-            <input className="input" value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="เช่น Makro, ฟาร์มกุ้ง" />
+            <input className="input" value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder={t("เช่น Makro, ฟาร์มกุ้ง")} />
           </label>
         )}
 
         {lines.size > 0 && (
           <section aria-labelledby="picked">
             <h2 id="picked" className="mb-2 font-semibold">
-              รายการที่เลือก ({lines.size})
+              {t("รายการที่เลือก ({n})", { n: lines.size })}
             </h2>
             <ul className="card divide-y divide-line">
               {[...lines].map(([id, qty]) => {
@@ -302,23 +309,23 @@ export function MovementForm({
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1">
-                      <Stepper label={`จำนวน ${it.nameTh}`} value={qty} onChange={(v) => setQty(id, v)} />
+                      <Stepper label={t("จำนวน {name}", { name: it.nameTh })} value={qty} onChange={(v) => setQty(id, v)} />
                     </span>
                   </li>
                 );
               })}
             </ul>
-            <p className="mt-1 text-xs text-muted">ลดเหลือ 0 เพื่อเอารายการออก</p>
+            <p className="mt-1 text-xs text-muted">{t("ลดเหลือ 0 เพื่อเอารายการออก")}</p>
           </section>
         )}
 
         <section aria-labelledby="choose">
           <h2 id="choose" className="mb-2 font-semibold">
-            เลือกรายการ
+            {t("เลือกรายการ")}
           </h2>
           <label className="relative mb-2 block">
             <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" width={18} height={18} />
-            <input className="input pl-10" placeholder="ค้นหา ไทย / English" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="ค้นหารายการ" />
+            <input className="input pl-10" placeholder={t("ค้นหา ไทย / English")} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={t("ค้นหารายการ")} />
           </label>
           <ul className="card divide-y divide-line">
             {choices.map((i) => (
@@ -334,13 +341,13 @@ export function MovementForm({
                 </button>
               </li>
             ))}
-            {choices.length === 0 && <li className="px-4 py-5 text-center text-muted">ไม่พบรายการ</li>}
+            {choices.length === 0 && <li className="px-4 py-5 text-center text-muted">{t("ไม่พบรายการ")}</li>}
           </ul>
         </section>
 
         <label className="grid gap-1.5">
           <span className="font-semibold">
-            หมายเหตุ {kind === "waste" && reason === "other" ? "" : <span className="font-normal text-muted">(ไม่บังคับ)</span>}
+            {t("หมายเหตุ")} {kind === "waste" && reason === "other" ? "" : <span className="font-normal text-muted">{t("(ไม่บังคับ)")}</span>}
           </span>
           <input className="input" value={note} onChange={(e) => setNote(e.target.value)} />
         </label>
@@ -349,7 +356,7 @@ export function MovementForm({
       <div className="safe-bottom fixed inset-x-0 bottom-16 z-10 border-t border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto max-w-xl px-4 py-3">
           <button type="button" className="btn btn-primary w-full text-lg" disabled={!ready || busy} onClick={() => void save()}>
-            {lines.size === 0 ? "เลือกรายการก่อน" : `${SUBMIT_LABEL[kind]} (${lines.size} รายการ)`}
+            {lines.size === 0 ? t("เลือกรายการก่อน") : t("{action} ({n} รายการ)", { action: t(SUBMIT_LABEL[kind]), n: lines.size })}
           </button>
         </div>
       </div>

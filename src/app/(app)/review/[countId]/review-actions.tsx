@@ -9,6 +9,7 @@ import {
 } from "@/app/actions/review";
 import type { ReviewLine } from "@/lib/stock";
 import { fmtQty, fmtSigned } from "@/components/status";
+import { useT } from "@/i18n/client";
 
 function useAction() {
   const [pending, start] = useTransition();
@@ -23,6 +24,7 @@ function useAction() {
 
 export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLine }) {
   const { pending, error, run } = useAction();
+  const { t } = useT();
   const [adjusting, setAdjusting] = useState(false);
   const [qty, setQty] = useState(String(line.counted ?? ""));
   const [reason, setReason] = useState("");
@@ -37,14 +39,18 @@ export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLi
           <b className="text-lg">{line.name}</b>
           {line.blind && <span className="pill ml-2 bg-sky-soft text-sky">Blind</span>}
           <p className="num text-sm text-muted">
-            นับได้ {fmtQty(line.counted)} · ควรเหลือ {fmtQty(line.expected)}
+            {t("นับได้ {counted} · ควรเหลือ {expected}", { counted: fmtQty(line.counted), expected: fmtQty(line.expected) })}
           </p>
           <p className="num text-xs text-muted">
-            ยกมา {fmtQty(line.opening)} + in {fmtQty(line.inQty)} − out {fmtQty(line.outQty)}
+            {t("ยกมา {opening} + in {in} − out {out}", {
+              opening: fmtQty(line.opening),
+              in: fmtQty(line.inQty),
+              out: fmtQty(line.outQty),
+            })}
           </p>
           {(line.mvIn > 0 || line.mvOut > 0) && (
             <p className="text-xs text-muted">
-              จากบันทึก: รับ/โอนเข้า {fmtQty(line.mvIn)} · เบิก/โอน/เสีย {fmtQty(line.mvOut)}
+              {t("จากบันทึก: รับ/โอนเข้า {in} · เบิก/โอน/เสีย {out}", { in: fmtQty(line.mvIn), out: fmtQty(line.mvOut) })}
             </p>
           )}
         </div>
@@ -52,26 +58,26 @@ export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLi
           {fmtSigned(v)} {line.unit}
         </span>
       </div>
-      {line.hint && <p className="mt-2 text-sm text-warn">⚠ {line.hint}</p>}
+      {line.hint && <p className="mt-2 text-sm text-warn">⚠ {t(line.hint)}</p>}
 
       {adjusting ? (
         <div className="mt-3 grid gap-2">
           <label className="grid gap-1 text-sm">
-            <span className="text-muted">ยอดที่ถูกต้อง ({line.unit})</span>
+            <span className="text-muted">{t("ยอดที่ถูกต้อง ({unit})", { unit: line.unit })}</span>
             <input className="input num" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} />
           </label>
           <label className="grid gap-1 text-sm">
-            <span className="text-muted">เหตุผล (บันทึกใน Audit log)</span>
+            <span className="text-muted">{t("เหตุผล (บันทึกใน Audit log)")}</span>
             <input
               className="input"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="เช่น ตรวจนับเองแล้ว พบอีก 2 แพ็กในชั้นล่าง"
+              placeholder={t("เช่น ตรวจนับเองแล้ว พบอีก 2 แพ็กในชั้นล่าง")}
             />
           </label>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" className="btn" onClick={() => setAdjusting(false)} disabled={pending}>
-              ยกเลิก
+              {t("ยกเลิก")}
             </button>
             <button
               type="button"
@@ -79,7 +85,7 @@ export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLi
               disabled={pending || !validQty || !reason.trim()}
               onClick={() => run(() => adjustLineAction(countId, line.itemId, n, reason))}
             >
-              บันทึกยอดใหม่
+              {t("บันทึกยอดใหม่")}
             </button>
           </div>
         </div>
@@ -92,7 +98,7 @@ export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLi
               disabled={pending}
               onClick={() => run(() => confirmLineAction(countId, line.itemId))}
             >
-              ✓ ยืนยันยอด
+              ✓ {t("ยืนยันยอด")}
             </button>
             <button
               type="button"
@@ -100,11 +106,11 @@ export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLi
               disabled={pending}
               onClick={() => run(() => recountLineAction(countId, line.itemId))}
             >
-              ↺ ให้นับซ้ำ
+              ↺ {t("ให้นับซ้ำ")}
             </button>
           </div>
           <button type="button" className="mt-2 text-sm font-medium text-sky underline" onClick={() => setAdjusting(true)}>
-            แก้ยอดเองพร้อมเหตุผล
+            {t("แก้ยอดเองพร้อมเหตุผล")}
           </button>
         </>
       )}
@@ -119,6 +125,7 @@ export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLi
 
 export function ApproveMatchedButton({ countId, count }: { countId: number; count: number }) {
   const { pending, error, run } = useAction();
+  const { t } = useT();
   return (
     <div className="safe-bottom sticky bottom-16 z-10 -mx-4 bg-paper/95 px-4 py-3 backdrop-blur">
       <button
@@ -127,7 +134,7 @@ export function ApproveMatchedButton({ countId, count }: { countId: number; coun
         disabled={pending}
         onClick={() => run(() => approveMatchedAction(countId))}
       >
-        {pending ? "กำลังอนุมัติ…" : `อนุมัติ ${count} รายการที่ตรงกัน`}
+        {pending ? t("กำลังอนุมัติ…") : t("อนุมัติ {n} รายการที่ตรงกัน", { n: count })}
       </button>
       {error && (
         <p role="alert" className="mt-2 text-sm text-bad">

@@ -1,20 +1,21 @@
 // Shared (client + server) types for รับของ / เบิก / โอน / ของเสีย.
+import { tk } from "@/i18n";
 
 export type MoveKind = "receive" | "issue" | "transfer" | "waste";
 
 export const KIND_LABEL: Record<MoveKind, string> = {
-  receive: "รับของเข้า",
-  issue: "เบิกเข้าครัว",
-  transfer: "โอนระหว่างจุด",
-  waste: "ของเสีย",
+  receive: tk("รับของเข้า"),
+  issue: tk("เบิกเข้าครัว"),
+  transfer: tk("โอนระหว่างจุด"),
+  waste: tk("ของเสีย"),
 };
 
 export const WASTE_REASONS: Record<string, string> = {
-  expired: "หมดอายุ",
-  spilled: "ทำหก / ตกแตก",
-  spoiled: "เสีย / คุณภาพไม่ผ่าน",
-  returned: "ส่งคืนซัพพลายเออร์",
-  other: "อื่นๆ",
+  expired: tk("หมดอายุ"),
+  spilled: tk("ทำหก / ตกแตก"),
+  spoiled: tk("เสีย / คุณภาพไม่ผ่าน"),
+  returned: tk("ส่งคืนซัพพลายเออร์"),
+  other: tk("อื่นๆ"),
 };
 
 export interface MoveInput {

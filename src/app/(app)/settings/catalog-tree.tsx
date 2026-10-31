@@ -4,12 +4,26 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Catalog, CatalogCategory, CatalogItem } from "@/lib/settings";
-import { LEVEL_LABEL, categoryPath, itemCount } from "@/lib/catalog-tree";
+import { LEVEL_LABEL, LEVEL_NAME, categoryPath, itemCount } from "@/lib/catalog-tree";
 import { addCategoryAction, deleteCategoryAction, renameCategoryAction } from "@/app/actions/settings";
 import { fmtQty } from "@/components/status";
 import { IconSearch } from "@/components/icons";
+import { tk } from "@/i18n";
+import { useT } from "@/i18n/client";
+
+/** "+ add a new <level> in <name>" for the level being added (Thai keys) */
+const ADD_LABEL: Record<number, string> = {
+  2: tk("+ เพิ่มชนิดใหม่ใน{name}"),
+  3: tk("+ เพิ่มส่วนใหม่ใน{name}"),
+};
+/** Placeholder for a new category name at a level (Thai keys) */
+const NAME_PLACEHOLDER: Record<number, string> = {
+  2: tk("ชื่อชนิด เช่น Wagyu"),
+  3: tk("ชื่อส่วน เช่น Wagyu"),
+};
 
 export function CatalogTree({ catalog }: { catalog: Catalog }) {
+  const { t } = useT();
   const [location, setLocation] = useState<number | "all">("all");
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<Set<number>>(() => {
@@ -33,10 +47,10 @@ export function CatalogTree({ catalog }: { catalog: Catalog }) {
 
   return (
     <>
-      <p className="mb-3 text-sm text-muted">จัดได้ 3 ชั้น: หมวด › ชนิด › ส่วน · ย้ายรายการข้ามหมวดได้ ประวัติการนับเดิมไม่หาย</p>
+      <p className="mb-3 text-sm text-muted">{t("จัดได้ 3 ชั้น: หมวด › ชนิด › ส่วน · ย้ายรายการข้ามหมวดได้ ประวัติการนับเดิมไม่หาย")}</p>
 
-      <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1" role="tablist" aria-label="จุดเก็บ">
-        {[{ id: "all" as const, name: "ทุกจุด" }, ...catalog.locations].map((l) => {
+      <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1" role="tablist" aria-label={t("จุดเก็บ")}>
+        {[{ id: "all" as const, name: t("ทุกจุด") }, ...catalog.locations].map((l) => {
           const n = l.id === "all" ? catalog.items.length : catalog.items.filter((i) => i.locationId === l.id).length;
           return (
             <button
@@ -59,10 +73,10 @@ export function CatalogTree({ catalog }: { catalog: Catalog }) {
         <IconSearch className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" width={18} height={18} />
         <input
           className="input pl-10"
-          placeholder="ค้นหา ไทย / English"
+          placeholder={t("ค้นหา ไทย / English")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          aria-label="ค้นหารายการ"
+          aria-label={t("ค้นหารายการ")}
         />
       </label>
 
@@ -90,10 +104,10 @@ export function CatalogTree({ catalog }: { catalog: Catalog }) {
               >
                 <span>
                   <b className="text-lg">{c.name}</b>
-                  <span className="ml-2 text-sm text-muted">หมวด</span>
+                  <span className="ml-2 text-sm text-muted">{t("หมวด")}</span>
                 </span>
                 <span className="text-sm text-muted">
-                  {itemCount(catalog.categories, items, c.id)} รายการ <span aria-hidden>{open.has(c.id) ? "▾" : "▸"}</span>
+                  {t("{n} รายการ", { n: itemCount(catalog.categories, items, c.id) })} <span aria-hidden>{open.has(c.id) ? "▾" : "▸"}</span>
                 </span>
               </button>
               {open.has(c.id) && (
@@ -106,7 +120,7 @@ export function CatalogTree({ catalog }: { catalog: Catalog }) {
 
           {uncategorised.length > 0 && (
             <section className="card overflow-hidden">
-              <h2 className="px-4 pt-3 font-semibold text-muted">ยังไม่มีหมวด</h2>
+              <h2 className="px-4 pt-3 font-semibold text-muted">{t("ยังไม่มีหมวด")}</h2>
               <ul className="divide-y divide-line">
                 {uncategorised.map((i) => (
                   <ItemRow key={i.id} item={i} />
@@ -115,13 +129,13 @@ export function CatalogTree({ catalog }: { catalog: Catalog }) {
             </section>
           )}
 
-          <AddCategory parent={null} label="+ เพิ่มหมวดใหม่" />
+          <AddCategory parent={null} label={t("+ เพิ่มหมวดใหม่")} />
         </div>
       )}
 
       <div className="safe-bottom fixed inset-x-0 bottom-16 z-10 mx-auto max-w-xl px-4 pb-3">
         <Link href="/settings/items/new" className="btn btn-primary w-full text-lg shadow-lg">
-          + เพิ่มรายการใหม่
+          {t("+ เพิ่มรายการใหม่")}
         </Link>
       </div>
       <div className="h-20" aria-hidden />
@@ -130,6 +144,7 @@ export function CatalogTree({ catalog }: { catalog: Catalog }) {
 }
 
 function CategoryBody({ category, catalog, items }: { category: CatalogCategory; catalog: Catalog; items: CatalogItem[] }) {
+  const { t } = useT();
   const own = items.filter((i) => i.categoryId === category.id);
   const children = catalog.categories.filter((c) => c.parentId === category.id);
   return (
@@ -147,20 +162,21 @@ function CategoryBody({ category, catalog, items }: { category: CatalogCategory;
           <p className="pt-1">
             <b>{child.name}</b>
             <span className="ml-2 text-sm text-muted">
-              {LEVEL_LABEL[child.level]} · {itemCount(catalog.categories, items, child.id)}
+              {t(LEVEL_LABEL[child.level])} · {itemCount(catalog.categories, items, child.id)}
             </span>
           </p>
           <CategoryBody category={child} catalog={catalog} items={items} />
         </div>
       ))}
       {category.level < 3 && (
-        <AddCategory parent={category} label={`+ เพิ่ม${LEVEL_LABEL[category.level + 1]}ใหม่ใน${category.name}`} />
+        <AddCategory parent={category} label={t(ADD_LABEL[category.level + 1], { name: category.name })} />
       )}
     </>
   );
 }
 
 function ItemRow({ item, sub }: { item: CatalogItem; sub?: string }) {
+  const { t } = useT();
   return (
     <li>
       <Link href={`/settings/items/${item.id}`} className="flex min-h-12 items-center justify-between gap-3 py-2">
@@ -172,7 +188,7 @@ function ItemRow({ item, sub }: { item: CatalogItem; sub?: string }) {
           {sub && <span className="block truncate text-sm text-muted">{sub}</span>}
         </span>
         <span className="flex shrink-0 items-center gap-1.5 text-sm text-muted">
-          {!item.active && <span className="pill bg-line text-muted">ปิดใช้งาน</span>}
+          {!item.active && <span className="pill bg-line text-muted">{t("ปิดใช้งาน")}</span>}
           {item.blind && <span className="pill bg-sky-soft text-sky">Blind</span>}
           <span>{item.unit}</span>
           {item.par > 0 && <span className="num">· Par {fmtQty(item.par)}</span>}
@@ -202,6 +218,7 @@ function AddCategory({ parent, label }: { parent: CatalogCategory | null; label:
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
   const { pending, error, save } = useSave();
+  const { t } = useT();
   if (!editing) {
     return (
       <button type="button" className="mt-1 min-h-11 text-left text-sm font-semibold text-accent" onClick={() => setEditing(true)}>
@@ -225,15 +242,15 @@ function AddCategory({ parent, label }: { parent: CatalogCategory | null; label:
         autoFocus
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder={parent ? `ชื่อ${LEVEL_LABEL[parent.level + 1]} เช่น Wagyu` : "ชื่อหมวด เช่น เนื้อวัว"}
-        aria-label="ชื่อหมวดใหม่"
+        placeholder={parent ? t(NAME_PLACEHOLDER[parent.level + 1]) : t("ชื่อหมวด เช่น เนื้อวัว")}
+        aria-label={t("ชื่อหมวดใหม่")}
       />
       <div className="grid grid-cols-2 gap-2">
         <button type="button" className="btn" onClick={() => setEditing(false)} disabled={pending}>
-          ยกเลิก
+          {t("ยกเลิก")}
         </button>
         <button type="submit" className="btn btn-primary" disabled={pending || !name.trim()}>
-          เพิ่ม
+          {t("เพิ่ม")}
         </button>
       </div>
       {error && <p role="alert" className="text-sm text-bad">{error}</p>}
@@ -245,6 +262,7 @@ function CategoryActions({ category }: { category: CatalogCategory }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(category.name);
   const { pending, error, save } = useSave();
+  const { t } = useT();
   return (
     <div className="mb-1">
       {editing ? (
@@ -255,7 +273,7 @@ function CategoryActions({ category }: { category: CatalogCategory }) {
             save(() => renameCategoryAction(category.id, name), () => setEditing(false));
           }}
         >
-          <input className="input" autoFocus value={name} onChange={(e) => setName(e.target.value)} aria-label={`ชื่อ${LEVEL_LABEL[category.level]}`} />
+          <input className="input" autoFocus value={name} onChange={(e) => setName(e.target.value)} aria-label={t(LEVEL_NAME[category.level])} />
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
@@ -263,23 +281,23 @@ function CategoryActions({ category }: { category: CatalogCategory }) {
               disabled={pending}
               onClick={() => save(() => deleteCategoryAction(category.id))}
             >
-              ลบ
+              {t("ลบ")}
             </button>
             <button type="button" className="btn" onClick={() => setEditing(false)} disabled={pending}>
-              ยกเลิก
+              {t("ยกเลิก")}
             </button>
             <button type="submit" className="btn btn-primary" disabled={pending || !name.trim()}>
-              บันทึก
+              {t("บันทึก")}
             </button>
           </div>
         </form>
       ) : (
         <div className="flex gap-4 text-sm">
           <Link href={`/settings/items/new?category=${category.id}`} className="min-h-10 py-2 font-semibold text-accent">
-            + เพิ่มรายการใน{category.name}
+            {t("+ เพิ่มรายการใน{name}", { name: category.name })}
           </Link>
           <button type="button" className="min-h-10 py-2 text-muted underline" onClick={() => setEditing(true)}>
-            แก้ชื่อ / ลบ
+            {t("แก้ชื่อ / ลบ")}
           </button>
         </div>
       )}

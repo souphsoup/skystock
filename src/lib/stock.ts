@@ -1,5 +1,7 @@
 import "server-only";
 import { getDb, type Db } from "./db";
+import { sheetProposals } from "./proposal-sheet";
+import { tk } from "@/i18n";
 import { HttpError, type User } from "./session";
 import { addDays, businessDate, daysBetween } from "./dates";
 import {
@@ -70,8 +72,8 @@ async function getCount(db: Db, user: User, countId: number): Promise<CountRow> 
   return c;
 }
 
-// Latest counted quantity per item from earlier, non-draft counts = ยกมา
-const OPENING_SQL = `
+// Latest counted quantity per item from earlier, non-draft counts = ยกมา ($1 location, $2 business date)
+export const OPENING_SQL = `
   select distinct on (l.item_id) l.item_id, l.counted
   from count_lines l join counts c on c.id = l.count_id
   join items i on i.id = l.item_id
@@ -202,13 +204,14 @@ async function loadSheet(db: Db, user: User, countId: number): Promise<Sheet> {
     businessDate: c.business_date,
     status: c.status,
     lines,
+    proposals: await sheetProposals(db, c.location_id, c.business_date),
     fetchedAt: Date.now(),
   };
 }
 
 function cleanQty(n: unknown, field: string): number {
   if (typeof n !== "number" || !Number.isFinite(n) || n < 0 || n > MAX_QTY) {
-    throw new HttpError(400, `ค่า ${field} ไม่ถูกต้อง`);
+    throw new HttpError(400, "ค่า {field} ไม่ถูกต้อง", { field });
   }
   return round2(n);
 }
@@ -225,9 +228,9 @@ export async function saveLines(
     const c = await getCount(tx, user, countId);
     for (const input of inputs) {
       const itemId = Number(input.itemId);
-      const inQty = cleanQty(input.inQty, "รับเข้า");
-      const outQty = cleanQty(input.outQty, "เบิกออก");
-      const counted = input.counted === null ? null : cleanQty(input.counted, "คงเหลือ");
+      const inQty = cleanQty(input.inQty, tk("รับเข้า"));
+      const outQty = cleanQty(input.outQty, tk("เบิกออก"));
+      const counted = input.counted === null ? null : cleanQty(input.counted, tk("คงเหลือ"));
       const [line] = await tx.query<{ status: LineStatus; in_qty: number; out_qty: number; counted: number | null }>(
         `select status, in_qty, out_qty, counted from count_lines where count_id = $1 and item_id = $2 for update`,
         [countId, itemId],
@@ -265,7 +268,7 @@ export async function submitCount(user: User, countId: number): Promise<Sheet> {
       `select count(*) as missing from count_lines where count_id = $1 and ${scope} and counted is null`,
       [countId],
     );
-    if (missing > 0) throw new HttpError(409, `ยังนับไม่ครบ เหลืออีก ${missing} รายการ`);
+    if (missing > 0) throw new HttpError(409, "ยังนับไม่ครบ เหลืออีก {n} รายการ", { n: missing });
     await tx.query(
       `update count_lines set status = case when expected is null or counted = expected then 'ok' else 'flag' end
        where count_id = $1 and ${scope}`,
@@ -302,6 +305,7 @@ export interface ReviewLine {
   counted: number | null;
   variance: number | null;
   status: LineStatus;
+  /** Thai key: render with t(hint) */
   hint: string | null;
 }
 
@@ -317,8 +321,8 @@ export interface Review {
 
 function varianceHint(l: { variance: number | null; inQty: number; outQty: number }): string | null {
   if (!l.variance) return null;
-  if (l.variance < 0 && l.outQty === 0) return "ไม่มีบันทึกเบิกออกหรือของเสียในรอบนี้";
-  if (l.variance > 0 && l.inQty === 0) return "ไม่มีบันทึกรับเข้าในรอบนี้";
+  if (l.variance < 0 && l.outQty === 0) return tk("ไม่มีบันทึกเบิกออกหรือของเสียในรอบนี้");
+  if (l.variance > 0 && l.inQty === 0) return tk("ไม่มีบันทึกรับเข้าในรอบนี้");
   return null;
 }
 
@@ -428,7 +432,7 @@ export async function requestRecount(user: User, countId: number, itemId: number
 
 /** หัวหน้าแก้ยอดเองพร้อมเหตุผล (บันทึก Audit log) */
 export async function adjustLine(user: User, countId: number, itemId: number, counted: number, reason: string) {
-  const qty = cleanQty(counted, "คงเหลือ");
+  const qty = cleanQty(counted, tk("คงเหลือ"));
   if (!reason.trim()) throw new HttpError(400, "กรุณาระบุเหตุผลที่แก้ยอด");
   const db = await getDb();
   await db.tx(async (tx) => {

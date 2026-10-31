@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { HttpError, requireApiUser } from "@/lib/session";
 import { adjustLine, approveMatched, confirmLine, requestRecount } from "@/lib/stock";
 import { can } from "@/lib/types";
+import { errorMessage, getT } from "@/i18n/server";
 
 type Result = { error: string | null };
 
@@ -14,9 +15,10 @@ async function run(countId: number, fn: (u: Awaited<ReturnType<typeof requireApi
     revalidatePath("/", "layout");
     return { error: null };
   } catch (e) {
-    if (e instanceof HttpError) return { error: e.message };
+    if (e instanceof HttpError) return { error: await errorMessage(e) };
     console.error(e);
-    return { error: `ทำรายการไม่สำเร็จ (รอบนับ ${countId})` };
+    const { t } = await getT();
+    return { error: t("ทำรายการไม่สำเร็จ (รอบนับ {id})", { id: countId }) };
   }
 }
 

@@ -8,6 +8,7 @@ import { toEmail, toFlex, type Digest, type DigestRow } from "./digest";
 import { LINE_ID, lineConfigured, pushLine, type LineSource, sourceId } from "./line";
 import { fmtBaht, fmtQty, fmtSigned } from "@/components/status";
 import type { RunStatus } from "./notify-labels";
+import { isLang, makeT, type Lang } from "@/i18n";
 
 export type Channel = "line" | "email";
 
@@ -24,14 +25,27 @@ export function appUrl(): string | null {
 export const emailConfigured = () => !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM;
 
 /** The morning job and the LINE webhook have no logged-in user; reports only need the outlet. */
-const systemUser = (outletId: number): User => ({ id: 0, outletId, name: "system", login: "system", role: "admin", lang: "th" });
+const systemUser = (outletId: number, lang: Lang = "th"): User => ({
+  id: 0,
+  outletId,
+  name: "system",
+  login: "system",
+  role: "admin",
+  lang,
+});
 
 // ---------------------------------------------------------------- build
 
-export async function buildDigest(outletId: number, date = addDays(businessDate(), -1)): Promise<Digest> {
+/** lang: the recipient's language (each target has its own). */
+export async function buildDigest(
+  outletId: number,
+  date = addDays(businessDate(), -1),
+  lang: Lang = "th",
+): Promise<Digest> {
+  const t = makeT(lang);
   const db = await getDb();
-  const sys = systemUser(outletId);
-  const [[outlet], tasks, ov, alerts, waste, [{ receipts }]] = await Promise.all([
+  const sys = systemUser(outletId, lang);
+  const [[outlet], tasks, ov, alerts, waste, [{ receipts }], [{ proposals }]] = await Promise.all([
     db.query<{ name: string }>(`select name from outlets where id = $1`, [outletId]),
     todayTasks(sys, date),
     overview(sys, date, date),
@@ -43,31 +57,41 @@ export async function buildDigest(outletId: number, date = addDays(businessDate(
          and ((recorded_at at time zone 'Asia/Bangkok') - interval '6 hours')::date = $2`,
       [outletId, date],
     ),
+    db.query<{ proposals: number }>(
+      `select count(*) as proposals from item_proposals where outlet_id = $1 and status = 'pending'`,
+      [outletId],
+    ),
   ]);
 
   const status: Digest["status"] = [];
-  const missing = tasks.filter((t) => !t.status || t.status === "draft").map((t) => t.locationName);
-  const waiting = tasks.filter((t) => t.status === "submitted" || t.status === "recount").map((t) => t.locationName);
-  if (missing.length) status.push({ text: `ยังไม่ส่งยอด: ${missing.join(", ")}`, tone: "bad" });
-  if (waiting.length) status.push({ text: `รอหัวหน้าอนุมัติ: ${waiting.join(", ")}`, tone: "warn" });
-  if (!tasks.length) status.push({ text: "ยังไม่มีจุดนับที่มีรายการ", tone: "muted" });
-  else if (!missing.length && !waiting.length) status.push({ text: `นับและอนุมัติครบ ${tasks.length} จุด ✓`, tone: "ok" });
+  const missing = tasks.filter((x) => !x.status || x.status === "draft").map((x) => x.locationName);
+  const waiting = tasks.filter((x) => x.status === "submitted" || x.status === "recount").map((x) => x.locationName);
+  if (missing.length) status.push({ text: t("ยังไม่ส่งยอด: {names}", { names: missing.join(", ") }), tone: "bad" });
+  if (waiting.length) status.push({ text: t("รอหัวหน้าอนุมัติ: {names}", { names: waiting.join(", ") }), tone: "warn" });
+  if (proposals > 0) status.push({ text: t("รายการใหม่ที่พนักงานเสนอ รออนุมัติ {n} รายการ", { n: proposals }), tone: "warn" });
+  if (!tasks.length) status.push({ text: t("ยังไม่มีจุดนับที่มีรายการ"), tone: "muted" });
+  else if (!missing.length && !waiting.length) {
+    status.push({ text: t("นับและอนุมัติครบ {n} จุด ✓", { n: tasks.length }), tone: "ok" });
+  }
 
   const varianceValue = Math.round(ov.variances.reduce((s, v) => s + v.value, 0));
   const stats: Digest["stats"] = [
-    { label: "มูลค่าคงคลัง", value: fmtBaht(ov.inventoryValue) },
-    { label: "ส่วนต่าง", value: fmtBaht(varianceValue), tone: varianceValue < 0 ? "bad" : undefined },
-    { label: "ของเสีย", value: fmtBaht(waste), tone: waste > 0 ? "bad" : undefined },
+    { label: t("มูลค่าคงคลัง"), value: fmtBaht(ov.inventoryValue) },
+    { label: t("ส่วนต่าง"), value: fmtBaht(varianceValue), tone: varianceValue < 0 ? "bad" : undefined },
+    { label: t("ของเสีย"), value: fmtBaht(waste), tone: waste > 0 ? "bad" : undefined },
   ];
 
   const sections: Digest["sections"] = [];
   if (alerts.length) {
     sections.push({
-      title: `ต่ำกว่า Par · ต้องสั่ง (${alerts.length})`,
+      title: t("ต่ำกว่า Par · ต้องสั่ง ({n})", { n: alerts.length }),
       rows: alerts.slice(0, MAX_PAR_ROWS).map(
         (a): DigestRow => ({
           left: `${a.name} · ${a.locationName}`,
-          right: a.level === "out" ? "หมด" : `เหลือ ${fmtQty(a.counted)} / ${fmtQty(a.par)} ${a.unit}`,
+          right:
+            a.level === "out"
+              ? t("หมด")
+              : t("เหลือ {qty} / {par} {unit}", { qty: fmtQty(a.counted), par: fmtQty(a.par), unit: a.unit }),
           tone: a.level === "out" ? "bad" : "warn",
         }),
       ),
@@ -76,7 +100,7 @@ export async function buildDigest(outletId: number, date = addDays(businessDate(
   }
   if (ov.variances.length) {
     sections.push({
-      title: "ส่วนต่างที่ต้องดู",
+      title: t("ส่วนต่างที่ต้องดู"),
       rows: ov.variances.slice(0, MAX_VARIANCE_ROWS).map((v) => ({
         left: `${v.name} · ${v.locationName}`,
         right: `${fmtSigned(v.variance)} ${v.unit} (${fmtBaht(v.value)})`,
@@ -86,20 +110,29 @@ export async function buildDigest(outletId: number, date = addDays(businessDate(
     });
   }
   if (receipts > 0) {
-    sections.push({ title: "รับของเข้า", rows: [{ left: "ใบส่งของที่บันทึก", right: `${receipts} ใบ` }], more: 0 });
+    sections.push({
+      title: t("รับของเข้า"),
+      rows: [{ left: t("ใบส่งของที่บันทึก"), right: t("{n} ใบ", { n: receipts }) }],
+      more: 0,
+    });
   }
 
   const base = appUrl();
-  const day = fmtWeekday(date);
+  const day = fmtWeekday(date, lang);
   return {
     date,
-    title: "สรุปสต๊อกเมื่อวาน",
+    lang,
+    title: t("สรุปสต๊อกเมื่อวาน"),
     subtitle: `${outlet?.name ?? "SOP-Stock"} · ${day}`,
     status,
     stats,
     sections,
     url: base ? `${base}/dashboard?period=week` : null,
-    altText: [`สรุปสต๊อก ${day}`, status[0]?.text, alerts.length ? `ต่ำกว่า Par ${alerts.length} รายการ` : null]
+    altText: [
+      t("สรุปสต๊อก {day}", { day }),
+      status[0]?.text,
+      alerts.length ? t("ต่ำกว่า Par {n} รายการ", { n: alerts.length }) : null,
+    ]
       .filter(Boolean)
       .join(" · "),
   };
@@ -113,6 +146,8 @@ export interface Target {
   address: string;
   label: string;
   active: boolean;
+  /** language of the summary this recipient gets */
+  lang: Lang;
   createdAt: string;
 }
 
@@ -124,9 +159,10 @@ export async function listTargets(user: User): Promise<Target[]> {
     address: string;
     label: string;
     active: boolean;
+    lang: Lang;
     created_at: Date;
   }>(
-    `select id, channel, address, label, active, created_at from notify_targets
+    `select id, channel, address, label, active, lang, created_at from notify_targets
      where outlet_id = $1 order by channel, created_at`,
     [user.outletId],
   );
@@ -136,13 +172,22 @@ export async function listTargets(user: User): Promise<Target[]> {
     address: r.address,
     label: r.label,
     active: r.active,
+    lang: r.lang,
     createdAt: new Date(r.created_at).toISOString(),
   }));
 }
 
 const EMAIL = /^[^\s@<>()",;]+@[^\s@<>()",;]+\.[a-z]{2,}$/i;
 
-export async function addTarget(user: User, channel: Channel, rawAddress: unknown, rawLabel: unknown): Promise<number> {
+export async function addTarget(
+  user: User,
+  channel: Channel,
+  rawAddress: unknown,
+  rawLabel: unknown,
+  rawLang: unknown = "th",
+): Promise<number> {
+  if (!isLang(rawLang)) throw new HttpError(400, "ภาษาไม่ถูกต้อง");
+  const lang = rawLang;
   const address = typeof rawAddress === "string" ? rawAddress.trim() : "";
   const label = typeof rawLabel === "string" ? rawLabel.trim().replace(/\s+/g, " ").slice(0, 60) : "";
   if (channel === "email" && !EMAIL.test(address)) throw new HttpError(400, "อีเมลไม่ถูกต้อง");
@@ -158,17 +203,25 @@ export async function addTarget(user: User, channel: Channel, rawAddress: unknow
     ]);
     if (dup) throw new HttpError(409, "มีผู้รับนี้อยู่แล้ว");
     const [r] = await tx.query<{ id: number }>(
-      `insert into notify_targets (outlet_id, channel, address, label, active) values ($1,$2,$3,$4,true) returning id`,
-      [user.outletId, channel, address, label],
+      `insert into notify_targets (outlet_id, channel, address, label, active, lang) values ($1,$2,$3,$4,true,$5) returning id`,
+      [user.outletId, channel, address, label, lang],
     );
-    await audit(tx, user.id, "notify.add", "notify_target", r.id, null, { channel, address, label });
+    await audit(tx, user.id, "notify.add", "notify_target", r.id, null, { channel, address, label, lang });
     return r.id;
   });
 }
 
 async function ownTarget(db: Db, user: User, id: number) {
-  const [t] = await db.query<{ id: number; outlet_id: number; channel: Channel; address: string; label: string; active: boolean }>(
-    `select id, outlet_id, channel, address, label, active from notify_targets where id = $1`,
+  const [t] = await db.query<{
+    id: number;
+    outlet_id: number;
+    channel: Channel;
+    address: string;
+    label: string;
+    active: boolean;
+    lang: Lang;
+  }>(
+    `select id, outlet_id, channel, address, label, active, lang from notify_targets where id = $1`,
     [id],
   );
   if (!t || t.outlet_id !== user.outletId) throw new HttpError(404, "ไม่พบผู้รับนี้");
@@ -181,6 +234,16 @@ export async function setTargetActive(user: User, id: number, active: boolean) {
     const t = await ownTarget(tx, user, id);
     await tx.query(`update notify_targets set active = $2 where id = $1`, [id, !!active]);
     await audit(tx, user.id, "notify.active", "notify_target", id, { active: t.active }, { active: !!active });
+  });
+}
+
+export async function setTargetLang(user: User, id: number, lang: unknown) {
+  if (!isLang(lang)) throw new HttpError(400, "ภาษาไม่ถูกต้อง");
+  const db = await getDb();
+  await db.tx(async (tx) => {
+    const t = await ownTarget(tx, user, id);
+    await tx.query(`update notify_targets set lang = $2 where id = $1`, [id, lang]);
+    await audit(tx, user.id, "notify.lang", "notify_target", id, { lang: t.lang }, { lang });
   });
 }
 
@@ -290,19 +353,27 @@ export async function sendDigest(
     runId = r.id;
   }
 
-  const targets = await db.query<{ id: number; channel: Channel; address: string; label: string }>(
+  const targets = await db.query<{ id: number; channel: Channel; address: string; label: string; lang: Lang }>(
     opts.targetId
-      ? `select id, channel, address, label from notify_targets where outlet_id = $1 and id = $2`
-      : `select id, channel, address, label from notify_targets where outlet_id = $1 and active order by id`,
+      ? `select id, channel, address, label, lang from notify_targets where outlet_id = $1 and id = $2`
+      : `select id, channel, address, label, lang from notify_targets where outlet_id = $1 and active order by id`,
     opts.targetId ? [outletId, opts.targetId] : [outletId],
   );
 
   const results: SendResult[] = [];
   if (targets.length) {
-    const digest = await buildDigest(outletId, date);
-    const flex = toFlex(digest);
-    const mail = toEmail(digest);
+    // One digest per language the recipients use.
+    const langs = [...new Set(targets.map((t) => (isLang(t.lang) ? t.lang : "th")))];
+    const built = new Map(
+      await Promise.all(
+        langs.map(async (lang) => {
+          const digest = await buildDigest(outletId, date, lang);
+          return [lang, { flex: toFlex(digest), mail: toEmail(digest) }] as const;
+        }),
+      ),
+    );
     for (const t of targets) {
+      const { flex, mail } = built.get(isLang(t.lang) ? t.lang : "th")!;
       const base = { targetId: t.id, label: t.label || t.address, channel: t.channel };
       const live = t.channel === "line" ? lineConfigured() : emailConfigured();
       try {

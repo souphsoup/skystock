@@ -6,13 +6,20 @@
 
 import { useSyncExternalStore } from "react";
 import type { Sheet } from "@/lib/types";
+import { tk, type Params } from "@/i18n";
 import { localDb, pendingCount, rememberSheet, type PendingEdit } from "./local-db";
+
+/** A Thai key (or a message the server already translated) plus params; translated where rendered. */
+export interface SyncError {
+  text: string;
+  params?: Params;
+}
 
 export interface SyncState {
   online: boolean;
   syncing: boolean;
   pending: number;
-  error: string | null;
+  error: SyncError | null;
   authRequired: boolean;
 }
 
@@ -87,14 +94,19 @@ async function pushEdits() {
           if (cur && cur.updatedAt === sent.updatedAt) await localDb.edits.delete(sent.key);
         }
       });
-      if (rejected.length) set({ error: `มี ${rejected.length} รายการที่แก้ไม่ได้แล้ว เพราะรอบนับถูกส่งหรืออนุมัติไปแล้ว` });
+      if (rejected.length) set({
+          error: {
+            text: tk("มี {n} รายการที่แก้ไม่ได้แล้ว เพราะรอบนับถูกส่งหรืออนุมัติไปแล้ว"),
+            params: { n: rejected.length },
+          },
+        });
       await receiveSheet(sheet);
     } catch (e) {
       if (!(e instanceof HttpFailure)) throw e; // network: try again later
       if (e.status === 401) throw e;
       // The server will never accept these (bad value, count gone): drop them.
       await localDb.edits.bulkDelete(list.map((x) => x.key));
-      set({ error: e.message });
+      set({ error: { text: e.message } });
     }
   }
 }
@@ -110,7 +122,7 @@ async function pushSubmits() {
       if (!(e instanceof HttpFailure)) throw e;
       if (e.status === 401) throw e;
       await localDb.submits.delete(s.countId);
-      set({ error: e.message });
+      set({ error: { text: e.message } });
     }
   }
 }
@@ -129,7 +141,29 @@ async function pushMoves() {
     if (res.status === 401) throw new HttpFailure(401, data.error ?? "");
     if (res.status >= 500) throw new HttpFailure(res.status, data.error ?? ""); // retry later
     await localDb.moves.delete(m.clientId);
-    set({ error: `${m.label}: ${data.error ?? `HTTP ${res.status}`} (ไม่ได้บันทึก)` });
+    set({
+      error: {
+        text: tk("{label}: {error} (ไม่ได้บันทึก)"),
+        params: { label: m.label, error: data.error ?? `HTTP ${res.status}` },
+      },
+    });
+  }
+}
+
+async function pushProposals() {
+  for (const p of await localDb.proposals.toArray()) {
+    try {
+      await post("/api/proposals", p.payload);
+      await localDb.proposals.delete(p.clientId);
+      // Show it under the sheet as "waiting for approval"
+      await fetchSheet(p.payload.locationId).then(receiveSheet, () => {});
+    } catch (e) {
+      if (!(e instanceof HttpFailure)) throw e; // network: try again later
+      if (e.status === 401 || e.status >= 500) throw e;
+      // Rejected for good (already on the sheet, already proposed…): tell the person and drop it.
+      await localDb.proposals.delete(p.clientId);
+      set({ error: { text: tk("{label}: {error} (ไม่ได้บันทึก)"), params: { label: p.payload.nameTh, error: e.message } } });
+    }
   }
 }
 
@@ -149,6 +183,7 @@ export function syncNow(): Promise<void> {
       try {
         // Movements first: they change in/out on the count sheet that edits and submits rely on.
         await pushMoves();
+        await pushProposals();
         await pushEdits();
         await pushSubmits();
         set({ authRequired: false });

@@ -4,6 +4,7 @@ import staff from "./staff";
 import reports from "./reports";
 import notify from "./notify";
 import settings from "./settings";
+import proposals from "./proposals";
 
 export const en: Record<string, string> = {
   ...common,
@@ -11,4 +12,5 @@ export const en: Record<string, string> = {
   ...reports,
   ...notify,
   ...settings,
+  ...proposals,
 };

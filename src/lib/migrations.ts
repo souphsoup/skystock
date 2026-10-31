@@ -220,4 +220,50 @@ alter table users add column lang text not null default 'th' check (lang in ('th
 alter table notify_targets add column lang text not null default 'th' check (lang in ('th','en'));
 `,
   },
+  {
+    id: "005_proposals",
+    sql: `
+-- พนักงานเสนอรายการที่ยังไม่มีในใบนับ หัวหน้าอนุมัติแล้วจึงกลายเป็นรายการจริง (items)
+create table item_proposals (
+  id serial primary key,
+  outlet_id int not null references outlets(id),
+  client_id uuid unique, -- idempotency key from the device's offline queue
+  location_id int not null references locations(id),
+  name_th text not null,
+  name_en text not null default '',
+  unit text not null,
+  counted numeric(12,2) check (counted >= 0), -- what the proposer found on the shelf, if counted
+  note text,
+  business_date date not null,
+  status text not null default 'pending' check (status in ('pending','approved','rejected')),
+  created_by int not null references users(id),
+  created_at timestamptz not null default now(),
+  decided_by int references users(id),
+  decided_at timestamptz,
+  reject_reason text,
+  item_id int references items(id)
+);
+create index item_proposals_pending_idx on item_proposals (outlet_id) where status = 'pending';
+alter table item_proposals enable row level security;
+`,
+  },
+  {
+    id: "006_lockdown",
+    sql: `
+-- Supabase: the public API roles get table privileges by default. RLS without policies
+-- already hides every row, but TRUNCATE ignores RLS, so take the privileges away too.
+-- Only this app's server (postgres role through the pooler) touches the data.
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    revoke all on all tables in schema public from anon, authenticated;
+    revoke all on all sequences in schema public from anon, authenticated;
+    revoke all on all functions in schema public from anon, authenticated;
+    alter default privileges in schema public revoke all on tables from anon, authenticated;
+    alter default privileges in schema public revoke all on sequences from anon, authenticated;
+    alter default privileges in schema public revoke all on functions from anon, authenticated;
+  end if;
+end $$;
+`,
+  },
 ];

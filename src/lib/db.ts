@@ -19,6 +19,7 @@ const DATE = 1082;
 async function createPostgres(url: string): Promise<Db> {
   const { default: postgres } = await import("postgres");
   const sql = postgres(url, {
+    onnotice: () => {}, // "already exists, skipping" etc. from migrations would fill the Vercel logs
     prepare: false, // Supabase transaction pooler does not support prepared statements
     max: 5,
     types: {
@@ -65,6 +66,8 @@ async function migrate(db: Db) {
   await db.query(
     `create table if not exists schema_migrations (id text primary key, applied_at timestamptz not null default now())`,
   );
+  // Like every other table: no policies, so Supabase's public API can't read or change it
+  await db.query(`alter table schema_migrations enable row level security`);
   const done = new Set(
     (await db.query<{ id: string }>(`select id from schema_migrations`)).map((r) => r.id),
   );

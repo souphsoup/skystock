@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { HttpError, requireApiUser, type User } from "@/lib/session";
 import * as notify from "@/lib/notify";
 import { can } from "@/lib/types";
+import { errorMessage } from "@/i18n/server";
 
 export type NotifyResult = { error: string | null; status?: string; results?: notify.SendResult[] };
 
@@ -14,20 +15,23 @@ async function run(fn: (u: User) => Promise<NotifyResult | void>): Promise<Notif
     revalidatePath("/settings/notify");
     return out ?? { error: null };
   } catch (e) {
-    if (e instanceof HttpError) return { error: e.message };
-    console.error(e);
-    return { error: "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง" };
+    if (!(e instanceof HttpError)) console.error(e);
+    return { error: await errorMessage(e) };
   }
 }
 
-export async function addTargetAction(channel: notify.Channel, address: string, label: string) {
+export async function addTargetAction(channel: notify.Channel, address: string, label: string, lang: string) {
   return run(async (u) => {
     if (channel !== "line" && channel !== "email") throw new HttpError(400, "ช่องทางไม่ถูกต้อง");
-    await notify.addTarget(u, channel, address, label);
+    await notify.addTarget(u, channel, address, label, lang);
   });
 }
 export async function setTargetActiveAction(id: number, active: boolean) {
   return run((u) => notify.setTargetActive(u, id, active));
+}
+/** Language of the summary this recipient gets (not the admin's own UI language). */
+export async function setTargetLangAction(id: number, lang: string) {
+  return run((u) => notify.setTargetLang(u, id, lang));
 }
 export async function removeTargetAction(id: number) {
   return run((u) => notify.removeTarget(u, id));

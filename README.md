@@ -18,9 +18,11 @@ This is the "open the trial in 3 days" scope from the proposal (`SOP-Stock-Propo
 | ✓ | Per-user 6-digit PIN, lockout after 5 wrong attempts, auto-logout after 15 idle minutes, append-only audit log |
 | ✓ | Receive goods (with delivery-note photo and supplier), issue to kitchen, transfer between locations, waste (with reason). These fill in/out on the count sheet automatically, work offline, and can be voided with a reason |
 | ✓ | Settings (supervisor/Admin): category › type › cut tree, add/edit/move items, set unit, location, Par, cost, Blind, deactivate items (history kept) |
+| ✓ | Staff propose an item that is on the shelf but not on the sheet, right from the count screen (works offline, warns about similar names already on the sheet). The supervisor sets category, Par and cost and approves it into a real item, or rejects it with a reason staff can see |
 | ✓ | User management (Admin): add users, reset PINs, change roles, deactivate accounts, sign out of every device immediately |
 | ✓ | Morning summary at 08:00 to LINE OA groups and email: yesterday's count status, below-Par items, variances, waste value, link to the dashboard. Admin manages recipients and sends tests in Settings › สรุปตอนเช้า |
-| – | Thai/English UI toggle, POS integration (phase 2) |
+| ✓ | Thai/English UI per user (Me › Language). The language follows the user to any device; the login page remembers the last language used on the device. Excel export follows the user's language; each morning-summary recipient has its own language |
+| – | POS integration (phase 2) |
 
 ## Run locally
 
@@ -76,6 +78,8 @@ src/lib/movements.ts    receive / issue / transfer / waste, attaching movements 
 src/lib/notify.ts       morning summary: build from reports, recipients, send once per day
 src/lib/digest.ts       summary → LINE Flex message / email HTML (also the settings preview)
 src/lib/line.ts         LINE Messaging API: push, reply, webhook signature
+src/i18n/               Thai/English: Thai text is the key, English in src/i18n/en/*.ts
+src/lib/proposals.ts    items proposed by staff: propose, approve (creates or re-activates the item), reject
 src/lib/files.ts        photo storage (Supabase Storage in production, .data/uploads locally)
 src/lib/session.ts      PIN login, JWT cookie, revoke via session_version
 src/client/             IndexedDB (Dexie) + offline-queue sync engine
@@ -96,4 +100,10 @@ Counting rules:
 - A transfer to a location that doesn't have the item yet creates the item there automatically (same Thai name, Par 0).
 - A movement can only be voided before the count round that uses it is submitted. After that, the supervisor corrects the figure on the review page instead.
 - Changing a role, resetting a PIN, or deactivating an account bumps `session_version`, which signs that user out on every device immediately.
+- Approving a proposed item: if an inactive item with the same name exists at that location it is switched back on (history kept) instead of creating a duplicate. The proposer's counted amount goes into that day's count: still a draft → filled in; submitted → added as a line for the supervisor to check; already approved → the item starts in the next count.
 - Morning summary: sent at most once per business date (`notify_runs`); a failed run can be retried, a sent or partly sent one is not resent. LINE chats that add the bot register switched off, so adding the bot to an outside group never leaks stock figures. Without LINE/email keys the summary is written to the server log instead (dry run).
+
+Translations:
+- Write UI text in Thai inside `t("…")` (server: `await getT()`, client: `useT()`), and add the English to `src/i18n/en/<area>.ts`. Labels in constants use `tk("…")` and are rendered with `t(LABEL[x])`. Use `{placeholders}` instead of `${…}`; English can pluralise with `{n, # item, # items}`.
+- `npm run i18n:check` lists Thai text with no English (and English nobody uses). A missing entry shows the Thai text, so nothing breaks.
+- Data (item, category and location names, units) is shown as entered. Items have Thai and English names; name categories and locations in whichever language the team reads.

@@ -31,7 +31,7 @@ export async function putPhoto(key: string, file: File): Promise<void> {
   if (sb) {
     const res = await fetch(`${sb.url}/storage/v1/object/${sb.bucket}/${key}`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${sb.key}`, "Content-Type": file.type, "x-upsert": "true" },
+      headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, "Content-Type": file.type, "x-upsert": "true" },
       body: bytes,
     });
     if (!res.ok) {
@@ -56,7 +56,7 @@ export async function getPhoto(key: string): Promise<{ bytes: ArrayBuffer; type:
   const sb = supabase();
   if (sb) {
     const res = await fetch(`${sb.url}/storage/v1/object/authenticated/${sb.bucket}/${key}`, {
-      headers: { Authorization: `Bearer ${sb.key}` },
+      headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` },
     });
     if (!res.ok) return null;
     return { bytes: await res.arrayBuffer(), type: res.headers.get("content-type") ?? type };

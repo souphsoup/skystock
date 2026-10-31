@@ -43,10 +43,13 @@ export const makeT =
   (text, params) =>
     translate(lang, text, params);
 
-/** Translates an error message and any string params that are themselves keys (field names). */
+// Error params that hold a field name (a tk() key) rather than data such as an item name.
+const KEY_PARAMS = new Set(["field", "label"]);
+
+/** Translates an error message; {field} / {label} params are translated too. */
 export function translateError(lang: Lang, message: string, params?: Params): string {
   if (lang === "th" || !params) return translate(lang, message, params);
-  const p: Params = {};
-  for (const [k, v] of Object.entries(params)) p[k] = typeof v === "string" ? translate(lang, v) : v;
+  const p: Params = { ...params };
+  for (const k of KEY_PARAMS) if (typeof p[k] === "string") p[k] = translate(lang, p[k] as string);
   return translate(lang, message, p);
 }

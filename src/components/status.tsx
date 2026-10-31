@@ -1,19 +1,21 @@
 import type { CountStatus } from "@/lib/types";
+import { makeT, tk, type Lang } from "@/i18n";
 
 const COUNT_STATUS: Record<CountStatus | "none", { label: string; cls: string; mark: string }> = {
-  none: { label: "ยังไม่เริ่ม", cls: "bg-sky-soft text-sky", mark: "○" },
-  draft: { label: "กำลังนับ", cls: "bg-accent-soft text-accent", mark: "◐" },
-  submitted: { label: "รอหัวหน้าตรวจ", cls: "bg-sky-soft text-sky", mark: "◔" },
-  recount: { label: "ต้องนับซ้ำ", cls: "bg-bad-soft text-bad", mark: "↺" },
-  approved: { label: "อนุมัติแล้ว", cls: "bg-ok-soft text-ok", mark: "✓" },
+  none: { label: tk("ยังไม่เริ่ม"), cls: "bg-sky-soft text-sky", mark: "○" },
+  draft: { label: tk("กำลังนับ"), cls: "bg-accent-soft text-accent", mark: "◐" },
+  submitted: { label: tk("รอหัวหน้าตรวจ"), cls: "bg-sky-soft text-sky", mark: "◔" },
+  recount: { label: tk("ต้องนับซ้ำ"), cls: "bg-bad-soft text-bad", mark: "↺" },
+  approved: { label: tk("อนุมัติแล้ว"), cls: "bg-ok-soft text-ok", mark: "✓" },
 };
 
-export function CountStatusPill({ status }: { status: CountStatus | null }) {
+export function CountStatusPill({ status, lang }: { status: CountStatus | null; lang: Lang }) {
   const s = COUNT_STATUS[status ?? "none"];
+  const t = makeT(lang);
   return (
     <span className={`pill ${s.cls}`}>
       <span aria-hidden>{s.mark}</span>
-      {s.label}
+      {t(s.label)}
     </span>
   );
 }

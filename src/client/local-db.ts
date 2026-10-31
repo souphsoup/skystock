@@ -6,6 +6,7 @@
 import Dexie, { type Table } from "dexie";
 import type { LineInput, Sheet } from "@/lib/types";
 import type { MoveInput } from "@/lib/movement-types";
+import type { ProposalInput } from "@/lib/proposal-types";
 
 export interface PendingEdit extends LineInput {
   key: string; // `${countId}:${itemId}`
@@ -26,11 +27,18 @@ export interface PendingMove {
   label: string;
 }
 
+/** A proposed new item waiting to be sent. */
+export interface PendingProposal {
+  clientId: string;
+  payload: ProposalInput;
+}
+
 class LocalDb extends Dexie {
   sheets!: Table<Sheet, number>; // keyed by locationId
   edits!: Table<PendingEdit, string>;
   submits!: Table<PendingSubmit, number>;
   moves!: Table<PendingMove, string>;
+  proposals!: Table<PendingProposal, string>;
 
   constructor() {
     super("sop-stock");
@@ -43,6 +51,8 @@ class LocalDb extends Dexie {
     this.version(2)
       .stores({ moves: "clientId" })
       .upgrade((tx) => tx.table("sheets").clear());
+    // v3: proposed-item outbox
+    this.version(3).stores({ proposals: "clientId" });
   }
 }
 
@@ -59,7 +69,12 @@ export async function rememberSheet(sheet: Sheet) {
 }
 
 export async function pendingCount(): Promise<number> {
-  return (await localDb.edits.count()) + (await localDb.submits.count()) + (await localDb.moves.count());
+  return (
+    (await localDb.edits.count()) +
+    (await localDb.submits.count()) +
+    (await localDb.moves.count()) +
+    (await localDb.proposals.count())
+  );
 }
 
 /** On logout from a shared tablet: forget cached sheets. Pending work is kept

@@ -1,11 +1,13 @@
 import type { Digest, Tone } from "@/lib/digest";
+import { makeT } from "@/i18n";
 
 const TONE: Record<Tone, string> = { ok: "text-ok", warn: "text-warn", bad: "text-bad", muted: "text-muted" };
 
-/** What recipients see in LINE / email, rendered with the app's theme. */
+/** What recipients see in LINE / email, rendered with the app's theme, in the digest's language. */
 export function DigestPreview({ digest: d }: { digest: Digest }) {
+  const t = makeT(d.lang);
   return (
-    <article className="card overflow-hidden" aria-label="ตัวอย่างสรุปตอนเช้า">
+    <article className="card overflow-hidden" aria-label={t("ตัวอย่างสรุปตอนเช้า")} lang={d.lang}>
       <header className="bg-[#15212f] px-4 py-3">
         <b className="block text-lg text-white">{d.title}</b>
         <span className="text-sm text-[#c9b48a]">{d.subtitle}</span>
@@ -37,10 +39,10 @@ export function DigestPreview({ digest: d }: { digest: Digest }) {
                 </li>
               ))}
             </ul>
-            {sec.more > 0 && <p className="mt-1 text-xs text-muted">และอีก {sec.more} รายการ</p>}
+            {sec.more > 0 && <p className="mt-1 text-xs text-muted">{t("และอีก {n} รายการ", { n: sec.more })}</p>}
           </section>
         ))}
-        {d.url && <span className="btn btn-primary pointer-events-none min-h-10 text-sm">เปิด Dashboard</span>}
+        {d.url && <span className="btn btn-primary pointer-events-none min-h-10 text-sm">{t("เปิด Dashboard")}</span>}
       </div>
     </article>
   );

@@ -4,16 +4,18 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { startSync, useSyncState } from "@/client/sync";
 import { IconCloud, IconWifiOff } from "./icons";
+import { useT } from "@/i18n/client";
 
 /** สถานะสัญญาณและยอดที่ยังไม่ซิงก์ — ใช้ไอคอน + คำ ไม่พึ่งสีอย่างเดียว */
 export function SyncBadge() {
   const s = useSyncState();
+  const { t } = useT();
   useEffect(() => startSync(), []);
 
   if (s.authRequired) {
     return (
       <Link href="/login" className="pill bg-bad-soft text-bad">
-        เข้าสู่ระบบใหม่เพื่อซิงก์
+        {t("เข้าสู่ระบบใหม่เพื่อซิงก์")}
       </Link>
     );
   }
@@ -21,7 +23,7 @@ export function SyncBadge() {
     return (
       <span className="pill bg-warn-soft text-warn" role="status">
         <IconWifiOff width={14} height={14} />
-        ออฟไลน์{s.pending > 0 ? ` · รอซิงก์ ${s.pending}` : ""}
+        {s.pending > 0 ? t("ออฟไลน์ · รอซิงก์ {n}", { n: s.pending }) : t("ออฟไลน์")}
       </span>
     );
   }
@@ -29,14 +31,14 @@ export function SyncBadge() {
     return (
       <span className="pill bg-sky-soft text-sky" role="status">
         <IconCloud width={14} height={14} />
-        {s.syncing ? "กำลังซิงก์…" : `รอซิงก์ ${s.pending}`}
+        {s.syncing ? t("กำลังซิงก์…") : t("รอซิงก์ {n}", { n: s.pending })}
       </span>
     );
   }
   return (
     <span className="pill bg-ok-soft text-ok" role="status">
       <IconCloud width={14} height={14} />
-      ซิงก์แล้ว
+      {t("ซิงก์แล้ว")}
     </span>
   );
 }

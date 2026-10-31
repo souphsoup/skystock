@@ -18,10 +18,24 @@
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="card" id="th">
       <h1>ตอนนี้ไม่มีสัญญาณ</h1>
       <p>หน้านี้ยังไม่เคยเปิดในเครื่องนี้ จึงเปิดแบบออฟไลน์ไม่ได้ ถ้ากำลังนับอยู่ ยอดที่บันทึกไว้ยังอยู่ในเครื่องครบ กลับมาออนไลน์แล้วระบบจะซิงก์ให้เอง</p>
       <button onclick="location.reload()">ลองอีกครั้ง</button>
     </div>
+    <div class="card" id="en" lang="en" hidden>
+      <h1>No signal right now</h1>
+      <p>This page hasn't been opened on this device before, so it can't open offline. If you were counting, everything you saved is still on this device and will sync when you're back online.</p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+    <script>
+      // Same language as the app (cookie set by the language switch / at login)
+      if (/(?:^|; )sop_lang=en/.test(document.cookie)) {
+        document.getElementById("th").hidden = true;
+        document.getElementById("en").hidden = false;
+        document.documentElement.lang = "en";
+        document.title = "Offline · SOP-Stock";
+      }
+    </script>
   </body>
 </html>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/i18n/client";
 
 /** ปุ่ม − / + ใหญ่ พร้อมช่องพิมพ์ตัวเลข (รองรับทศนิยมสำหรับ กก.) */
 export function Stepper({
@@ -16,6 +17,7 @@ export function Stepper({
 }) {
   // While typing keep the raw text ("1." on the way to "1.5"); otherwise show the value.
   const [text, setText] = useState(String(value));
+  const { t } = useT();
   const [focused, setFocused] = useState(false);
 
   const commit = (s: string) => {
@@ -31,7 +33,7 @@ export function Stepper({
         className="btn num w-14 px-0 text-2xl"
         onClick={() => onChange(Math.max(0, Math.round((value - 1) * 100) / 100))}
         disabled={disabled || value <= 0}
-        aria-label={`ลด ${label}`}
+        aria-label={t("ลด {label}", { label })}
       >
         −
       </button>
@@ -57,7 +59,7 @@ export function Stepper({
         className="btn num w-14 px-0 text-2xl"
         onClick={() => onChange(Math.round((value + 1) * 100) / 100)}
         disabled={disabled}
-        aria-label={`เพิ่ม ${label}`}
+        aria-label={t("เพิ่ม {label}", { label })}
       >
         +
       </button>

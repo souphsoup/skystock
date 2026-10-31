@@ -1,7 +1,11 @@
 // Client-safe helpers for the หมวด › ชนิด › ส่วน tree.
 import type { CatalogCategory, CatalogItem } from "./settings";
+import { tk } from "@/i18n";
 
-export const LEVEL_LABEL = ["", "หมวด", "ชนิด", "ส่วน"];
+/** Thai keys, indexed by level: render with t(LEVEL_LABEL[level]) */
+export const LEVEL_LABEL = ["", tk("หมวด"), tk("ชนิด"), tk("ส่วน")];
+/** "Name of a …" per level (Thai keys) */
+export const LEVEL_NAME = ["", tk("ชื่อหมวด"), tk("ชื่อชนิด"), tk("ชื่อส่วน")];
 
 export function categoryPath(categories: CatalogCategory[], id: number | null): string[] {
   const byId = new Map(categories.map((c) => [c.id, c]));
@@ -38,3 +42,6 @@ export function itemCount(categories: CatalogCategory[], items: CatalogItem[], i
   }
   return items.filter((i) => i.categoryId !== null && ids.has(i.categoryId)).length;
 }
+
+/** Units offered as chips (the shop's own units are added from existing items). Data, not translated. */
+export const DEFAULT_UNITS = ["แพ็ก", "กก.", "ชิ้น", "ถุง", "ขวด", "กระปุก", "ไม้", "ลูก", "ก้อน"];

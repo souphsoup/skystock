@@ -1,2 +1,107 @@
-const notify: Record<string, string> = {};
+// Morning stock summary (LINE OA / email), its settings page and the LINE webhook.
+const notify: Record<string, string> = {
+  // digest (src/lib/notify.ts, src/lib/digest.ts, src/components/digest-preview.tsx)
+  "สรุปสต๊อกเมื่อวาน": "Yesterday's stock summary",
+  "สรุปสต๊อก {day}": "Stock summary {day}",
+  "ยังไม่ส่งยอด: {names}": "Not submitted: {names}",
+  "รอหัวหน้าอนุมัติ: {names}": "Waiting for supervisor approval: {names}",
+  "ยังไม่มีจุดนับที่มีรายการ": "No locations with items yet",
+  "นับและอนุมัติครบ {n} จุด ✓": "{n, # location, All # locations} counted and approved ✓",
+  "มูลค่าคงคลัง": "Inventory value",
+  "ส่วนต่าง": "Variance",
+  "ของเสีย": "Waste",
+  "ต่ำกว่า Par · ต้องสั่ง ({n})": "Below Par · reorder ({n})",
+  "ต่ำกว่า Par {n} รายการ": "{n, # item, # items} below Par",
+  "หมด": "Out",
+  "เหลือ {qty} / {par} {unit}": "{qty} / {par} {unit} left",
+  "ส่วนต่างที่ต้องดู": "Variances to check",
+  "รับของเข้า": "Receive goods",
+  "ใบส่งของที่บันทึก": "Delivery notes recorded",
+  "{n} ใบ": "{n}",
+  "และอีก {n} รายการ": "and {n, # more item, # more items}",
+  "เปิด Dashboard": "Open Dashboard",
+  "ส่งอัตโนมัติจาก SOP-Stock": "Sent automatically by SOP-Stock",
+  "ตัวอย่างสรุปตอนเช้า": "Morning summary preview",
+
+  // LINE webhook reply (Thai and English are both sent)
+  "เชื่อมแชตนี้กับ SOP-Stock แล้ว\nรอ Admin เปิดรับ \"สรุปสต๊อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า":
+    "This chat is now linked to SOP-Stock.\nWaiting for Admin to switch on the \"morning stock summary\" in Settings › Morning summary.",
+
+  // run statuses (src/lib/notify-labels.ts)
+  "กำลังส่ง": "Sending",
+  "ส่งแล้ว": "Sent",
+  "ส่งได้บางส่วน": "Partly sent",
+  "ส่งไม่สำเร็จ": "Failed",
+  "ทดลอง ไม่ได้ส่งจริง": "Dry run (not actually sent)",
+  "ไม่มีผู้รับ": "No recipients",
+
+  // settings page
+  "สรุปตอนเช้า": "Morning summary",
+  "ทุกวัน 08:00 น. ระบบส่งสรุปยอดนับเมื่อวานเข้า LINE และอีเมลของผู้รับที่เปิดไว้ ส่งวันละครั้ง":
+    "Every day at 08:00 the system sends yesterday's count summary to the LINE chats and emails switched on below. Once a day.",
+  "ตัวอย่างที่ผู้รับจะเห็น": "What recipients will see",
+  "ประวัติการส่ง": "Send history",
+  "ยังไม่เคยส่ง": "Nothing sent yet",
+  "ส่งตามเวลา": "Scheduled",
+  "ส่งทดสอบ": "Send test",
+  "ยอด {day}": "counts of {day}",
+  "ถึง {names}": "To {names}",
+  "การเชื่อมต่อ (สำหรับผู้ดูแลระบบ)": "Connections (for system admins)",
+  "LINE OA ส่งข้อความ": "LINE OA sending",
+  "LINE OA รับกลุ่มอัตโนมัติ": "LINE OA auto-adds groups",
+  "อีเมล (Resend)": "Email (Resend)",
+  "ส่งอัตโนมัติ 08:00 น.": "Automatic send at 08:00",
+  "ลิงก์เปิด Dashboard": "Open Dashboard link",
+  "พร้อม": "Ready",
+  "ยังไม่ตั้ง": "Not set",
+  "Webhook URL สำหรับ LINE Developers › Messaging API": "Webhook URL for LINE Developers › Messaging API",
+  "ถ้ายังไม่ได้ตั้งบัญชี ระบบจะทดลองส่ง (บันทึกลง log ของเซิร์ฟเวอร์) แทนการส่งจริง ขั้นตอนตั้งค่าอยู่ใน README":
+    "Until the accounts are set up, the system does a dry run (written to the server log) instead of sending. Setup steps are in the README.",
+
+  // recipients (notify-targets.tsx)
+  "ผู้ใช้": "User",
+  "กลุ่ม": "Group",
+  "ห้องแชต": "Chat room",
+  "ทดลองส่งแล้ว (ยังไม่ได้ตั้งบัญชี จึงไม่ได้ส่งจริง ดูข้อความใน log)":
+    "Dry run done (accounts not set up, so nothing was actually sent; see the log)",
+  "ส่งไม่สำเร็จ {failed} จาก {total}: {errors}": "{failed} of {total} failed: {errors}",
+  "ส่งแล้ว {n} ผู้รับ": "Sent to {n, # recipient, # recipients}",
+  "ยังไม่เชื่อม LINE OA": "LINE OA not connected",
+  "เพิ่มบอท LINE OA ของร้านเข้ากลุ่มผู้บริหาร แล้วกลุ่มจะขึ้นที่นี่ให้เปิดรับ":
+    "Add the bar's LINE OA bot to the management group. The group will then show up here to switch on.",
+  "อีเมล": "Email",
+  "ยังไม่ตั้งค่าอีเมล": "Email not set up",
+  "กำลังส่ง…": "Sending…",
+  "ส่งสรุปทดสอบตอนนี้ ({n} ผู้รับที่เปิดไว้)": "Send test summary now ({n, # recipient, # recipients} on)",
+  "รอเปิดรับ": "Waiting to be switched on",
+  "รับสรุป {name}": "Send summary to {name}",
+  "ปิดรับแล้ว": "Switched off",
+  "เปิดรับแล้ว": "Switched on",
+  "ลบแล้ว": "Removed",
+  "ยืนยันลบ": "Confirm remove",
+  "ไม่ลบ": "Keep",
+  "ลบ": "Delete",
+  "ภาษาของสรุปสำหรับ {name}": "Summary language for {name}",
+  "ภาษาของสรุป": "Summary language",
+  "เปลี่ยนภาษาแล้ว": "Language changed",
+  "ใส่ LINE ID เอง": "Enter LINE ID manually",
+  "+ เพิ่มอีเมล": "+ Add email",
+  "เพิ่มแล้ว": "Added",
+  "LINE userId หรือ groupId": "LINE userId or groupId",
+  "ชื่อเรียก (ไม่บังคับ)": "Name (optional)",
+  "เช่น กลุ่มผู้บริหาร": "e.g. Management group",
+  "เช่น คุณนภา GM": "e.g. Napa, GM",
+  "ยกเลิก": "Cancel",
+  "เพิ่มผู้รับ": "Add recipient",
+
+  // errors (src/lib/notify.ts, src/app/actions/notify.ts)
+  "อีเมลไม่ถูกต้อง": "Invalid email",
+  "LINE ID ต้องขึ้นต้นด้วย U, C หรือ R ตามด้วยตัวอักษร 32 ตัว": "LINE ID must start with U, C or R followed by 32 characters",
+  "มีผู้รับนี้อยู่แล้ว": "This recipient already exists",
+  "ไม่พบผู้รับนี้": "Recipient not found",
+  "ภาษาไม่ถูกต้อง": "Invalid language",
+  "ช่องทางไม่ถูกต้อง": "Invalid channel",
+  "ผู้รับไม่ถูกต้อง": "Invalid recipient",
+  "ยังไม่มีผู้รับที่เปิดไว้": "No recipients switched on yet",
+};
 export default notify;

@@ -25,7 +25,6 @@ const common: Record<string, string> = {
   "ออกจากระบบ": "Sign out",
   // login
   "นับสต๊อกครัวและบาร์": "Kitchen & bar stock counts",
-  "นับสต๊อกครัวและบาร์จากมือถือ": "Kitchen & bar stock counts from your phone",
   "กรอกชื่อผู้ใช้และ PIN 6 หลัก": "Enter your username and 6-digit PIN",
   "ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง": "Wrong username or PIN",
   "ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน {n} นาที": "Too many wrong PINs. Try again in {n} minutes.",

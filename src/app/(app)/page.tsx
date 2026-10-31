@@ -7,55 +7,59 @@ import { can } from "@/lib/types";
 import { CountStatusPill, fmtQty } from "@/components/status";
 import { SyncBadge } from "@/components/sync-badge";
 import { IconAlert, IconBox, IconSwap, IconTrash, IconTruck } from "@/components/icons";
+import { getT } from "@/i18n/server";
 
 export default async function HomePage() {
   const user = await requireUser();
   if (!can.count(user.role)) redirect("/dashboard");
+  const { t, lang } = await getT();
 
   const [tasks, alerts, queue] = await Promise.all([
     todayTasks(user),
     stockAlerts(user),
     can.review(user.role) ? reviewQueue(user) : Promise.resolve(null),
   ]);
-  const open = tasks.filter((t) => t.status === null || t.status === "draft" || t.status === "recount");
-  const next = open.find((t) => t.status === "recount") ?? open[0];
-  const recountTasks = tasks.filter((t) => t.status === "recount");
+  const open = tasks.filter((task) => task.status === null || task.status === "draft" || task.status === "recount");
+  const next = open.find((task) => task.status === "recount") ?? open[0];
+  const recountTasks = tasks.filter((task) => task.status === "recount");
 
   return (
     <main className="mx-auto max-w-xl px-4 pt-5">
       <header className="mb-5 flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">{fmtWeekday(businessDate())}</p>
-          <h1 className="text-2xl font-bold">สวัสดี คุณ{user.name}</h1>
+          <p className="text-sm text-muted">{fmtWeekday(businessDate(), lang)}</p>
+          <h1 className="text-2xl font-bold">{t("สวัสดี คุณ{name}", { name: user.name })}</h1>
         </div>
         <SyncBadge />
       </header>
 
-      {recountTasks.map((t) => (
+      {recountTasks.map((task) => (
         <Link
-          key={t.locationId}
-          href={`/count/${t.locationId}`}
+          key={task.locationId}
+          href={`/count/${task.locationId}`}
           className="mb-3 flex items-center gap-3 rounded-2xl border border-bad bg-bad-soft p-4 text-bad"
         >
           <IconAlert />
           <span className="font-semibold">
-            หัวหน้าขอให้นับซ้ำ {t.recount} รายการที่ {t.locationName}
+            {t("หัวหน้าขอให้นับซ้ำ {n} รายการที่ {location}", { n: task.recount, location: task.locationName })}
           </span>
         </Link>
       ))}
 
       {next ? (
         <section className="card mb-5 p-5" aria-labelledby="next-task">
-          <p className="text-sm font-semibold text-accent">งานถัดไป · ก่อน {next.dueTime}</p>
+          <p className="text-sm font-semibold text-accent">{t("งานถัดไป · ก่อน {time}", { time: next.dueTime })}</p>
           <h2 id="next-task" className="mt-1 text-xl font-bold">
-            {next.status === "recount" ? `นับซ้ำ ${next.locationName}` : `นับ ${next.locationName} ประจำวัน`}
+            {next.status === "recount"
+              ? t("นับซ้ำ {location}", { location: next.locationName })
+              : t("นับ {location} ประจำวัน", { location: next.locationName })}
           </h2>
           <p className="mt-1 text-muted">
-            {next.items} รายการ
-            {next.status === "draft" && ` · นับแล้ว ${next.counted}`}
+            {t("{n} รายการ", { n: next.items })}
+            {next.status === "draft" && ` · ${t("นับแล้ว {n}", { n: next.counted })}`}
           </p>
           <Link href={`/count/${next.locationId}`} className="btn btn-primary mt-4 w-full text-lg">
-            {next.status === "draft" ? "นับต่อ" : next.status === "recount" ? "เริ่มนับซ้ำ" : "เริ่มนับ"}
+            {next.status === "draft" ? t("นับต่อ") : next.status === "recount" ? t("เริ่มนับซ้ำ") : t("เริ่มนับ")}
           </Link>
         </section>
       ) : (
@@ -64,27 +68,27 @@ export default async function HomePage() {
             ✓
           </span>
           <div>
-            <h2 className="font-bold">นับครบทุกจุดแล้ววันนี้</h2>
-            <p className="text-sm text-muted">ยอดถูกส่งให้หัวหน้าตรวจเรียบร้อย</p>
+            <h2 className="font-bold">{t("นับครบทุกจุดแล้ววันนี้")}</h2>
+            <p className="text-sm text-muted">{t("ยอดถูกส่งให้หัวหน้าตรวจเรียบร้อย")}</p>
           </div>
         </section>
       )}
 
-      <section className="mb-5 grid grid-cols-2 gap-3" aria-label="งานหลัก">
+      <section className="mb-5 grid grid-cols-2 gap-3" aria-label={t("งานหลัก")}>
         <Link
           href={`/count/${(next ?? tasks[0])?.locationId ?? ""}`}
           className="card flex min-h-28 flex-col justify-between border-accent/40 p-4"
         >
           <IconBox className="text-accent" width={28} height={28} />
           <span>
-            <b className="block">นับสต๊อก</b>
-            <span className="text-sm text-muted">{tasks.map((t) => t.locationName).join(" · ")}</span>
+            <b className="block">{t("นับสต๊อก")}</b>
+            <span className="text-sm text-muted">{tasks.map((task) => task.locationName).join(" · ")}</span>
           </span>
         </Link>
         {[
-          { href: "/receive", label: "รับของเข้า", sub: "ถ่ายรูปใบส่งของ", Icon: IconTruck, cls: "text-ok" },
-          { href: "/move", label: "เบิก / โอน", sub: "เข้าครัว · ชั้น 22 ↔ 24", Icon: IconSwap, cls: "text-sky" },
-          { href: "/waste", label: "ของเสีย", sub: "หมดอายุ · ทำหก", Icon: IconTrash, cls: "text-bad" },
+          { href: "/receive", label: t("รับของเข้า"), sub: t("ถ่ายรูปใบส่งของ"), Icon: IconTruck, cls: "text-ok" },
+          { href: "/move", label: t("เบิก / โอน"), sub: t("เข้าครัว · ชั้น 22 ↔ 24"), Icon: IconSwap, cls: "text-sky" },
+          { href: "/waste", label: t("ของเสีย"), sub: t("หมดอายุ · ทำหก"), Icon: IconTrash, cls: "text-bad" },
         ].map(({ href, label, sub, Icon, cls }) => (
           <Link key={href} href={href} className="card flex min-h-28 flex-col justify-between p-4">
             <Icon className={cls} width={28} height={28} />
@@ -96,7 +100,7 @@ export default async function HomePage() {
         ))}
       </section>
       <Link href="/movements" className="-mt-3 mb-5 block text-right text-sm font-medium text-sky underline">
-        ประวัติรับ · เบิก · โอน · ของเสีย
+        {t("ประวัติรับ · เบิก · โอน · ของเสีย")}
       </Link>
 
       {alerts.length > 0 && (
@@ -106,11 +110,15 @@ export default async function HomePage() {
             <b className="block">
               {alerts
                 .slice(0, 3)
-                .map((a) => (a.level === "out" ? `${a.name} หมดแล้ว` : `${a.name} เหลือ ${fmtQty(a.counted)}`))
+                .map((a) =>
+                  a.level === "out"
+                    ? t("{name} หมดแล้ว", { name: a.name })
+                    : t("{name} เหลือ {qty}", { name: a.name, qty: fmtQty(a.counted) }),
+                )
                 .join(" · ")}
-              {alerts.length > 3 && ` และอีก ${alerts.length - 3} รายการ`}
+              {alerts.length > 3 && ` ${t("และอีก {n} รายการ", { n: alerts.length - 3 })}`}
             </b>
-            <span className="text-sm text-muted">ต่ำกว่าจำนวนขั้นต่ำ (Par) ดูรายการที่ต้องสั่ง</span>
+            <span className="text-sm text-muted">{t("ต่ำกว่าจำนวนขั้นต่ำ (Par) ดูรายการที่ต้องสั่ง")}</span>
           </span>
         </Link>
       )}
@@ -118,9 +126,11 @@ export default async function HomePage() {
       {queue && queue.pending.length > 0 && (
         <Link href="/review" className="card mb-5 flex items-center justify-between p-4">
           <span>
-            <b className="block">รอตรวจและอนุมัติ</b>
+            <b className="block">{t("รอตรวจและอนุมัติ")}</b>
             <span className="text-sm text-muted">
-              {queue.pending.map((q) => `${q.locationName}${q.flagged ? ` (ต้องดู ${q.flagged})` : ""}`).join(" · ")}
+              {queue.pending
+                .map((q) => (q.flagged ? t("{location} (ต้องดู {n})", { location: q.locationName, n: q.flagged }) : q.locationName))
+                .join(" · ")}
             </span>
           </span>
           <span className="num text-2xl font-bold text-accent">{queue.pending.length}</span>
@@ -129,19 +139,19 @@ export default async function HomePage() {
 
       <section aria-labelledby="today-points">
         <h2 id="today-points" className="mb-2 text-sm font-semibold text-muted">
-          จุดนับวันนี้
+          {t("จุดนับวันนี้")}
         </h2>
         <ul className="card divide-y divide-line">
-          {tasks.map((t) => (
-            <li key={t.locationId}>
-              <Link href={`/count/${t.locationId}`} className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">
+          {tasks.map((task) => (
+            <li key={task.locationId}>
+              <Link href={`/count/${task.locationId}`} className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">
                 <span>
-                  <b>{t.locationName}</b>
+                  <b>{task.locationName}</b>
                   <span className="block text-sm text-muted">
-                    {t.counted}/{t.items} รายการ · ก่อน {t.dueTime}
+                    {t("{counted}/{items} รายการ · ก่อน {time}", { counted: task.counted, items: task.items, time: task.dueTime })}
                   </span>
                 </span>
-                <CountStatusPill status={t.status} />
+                <CountStatusPill status={task.status} lang={lang} />
               </Link>
             </li>
           ))}

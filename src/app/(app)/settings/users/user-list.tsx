@@ -11,12 +11,15 @@ import {
   setUserActiveAction,
   updateUserAction,
 } from "@/app/actions/settings";
+import { tk } from "@/i18n";
+import { useT } from "@/i18n/client";
 
+/** label / hint are Thai keys: render with t() */
 const ROLES: { value: Role; label: string; hint: string }[] = [
-  { value: "operation", label: ROLE_LABEL.operation, hint: "นับสต๊อก" },
-  { value: "supervisor", label: ROLE_LABEL.supervisor, hint: "นับ + ตรวจอนุมัติ + ตั้งค่ารายการ" },
-  { value: "manager", label: ROLE_LABEL.manager, hint: "ดูภาพรวมและรายงาน" },
-  { value: "admin", label: ROLE_LABEL.admin, hint: "ทุกอย่าง + จัดการผู้ใช้" },
+  { value: "operation", label: ROLE_LABEL.operation, hint: tk("นับสต๊อก") },
+  { value: "supervisor", label: ROLE_LABEL.supervisor, hint: tk("นับ + ตรวจอนุมัติ + ตั้งค่ารายการ") },
+  { value: "manager", label: ROLE_LABEL.manager, hint: tk("ดูภาพรวมและรายงาน") },
+  { value: "admin", label: ROLE_LABEL.admin, hint: tk("ทุกอย่าง + จัดการผู้ใช้") },
 ];
 
 function useAction() {
@@ -40,8 +43,9 @@ function useAction() {
 const pinOk = (p: string) => /^\d{6}$/.test(p);
 
 function RolePicker({ value, onChange }: { value: Role; onChange: (r: Role) => void }) {
+  const { t } = useT();
   return (
-    <div className="grid gap-2" role="radiogroup" aria-label="บทบาท">
+    <div className="grid gap-2" role="radiogroup" aria-label={t("บทบาท")}>
       {ROLES.map((r) => (
         <button
           key={r.value}
@@ -53,8 +57,8 @@ function RolePicker({ value, onChange }: { value: Role; onChange: (r: Role) => v
             value === r.value ? "border-accent bg-accent-soft" : "border-line bg-surface"
           }`}
         >
-          <b>{r.label}</b>
-          <span className="text-sm text-muted">{r.hint}</span>
+          <b>{t(r.label)}</b>
+          <span className="text-sm text-muted">{t(r.hint)}</span>
         </button>
       ))}
     </div>
@@ -63,6 +67,7 @@ function RolePicker({ value, onChange }: { value: Role; onChange: (r: Role) => v
 
 export function UserList({ users, selfId }: { users: UserRow[]; selfId: number }) {
   const [openId, setOpenId] = useState<number | null>(null);
+  const { t } = useT();
   return (
     <>
       <AddUser />
@@ -78,15 +83,15 @@ export function UserList({ users, selfId }: { users: UserRow[]; selfId: number }
               <span className={u.active ? "" : "text-muted"}>
                 <b className="block">
                   {u.name}
-                  {u.id === selfId && <span className="ml-1 text-sm font-normal text-muted">(คุณ)</span>}
+                  {u.id === selfId && <span className="ml-1 text-sm font-normal text-muted">{t("(คุณ)")}</span>}
                 </b>
                 <span className="text-sm text-muted">
-                  {u.login} · {ROLE_LABEL[u.role]}
+                  {u.login} · {t(ROLE_LABEL[u.role])}
                 </span>
               </span>
               <span className="flex gap-1.5">
-                {u.locked && <span className="pill bg-warn-soft text-warn">ล็อก PIN</span>}
-                {!u.active && <span className="pill bg-line text-muted">ปิดใช้งาน</span>}
+                {u.locked && <span className="pill bg-warn-soft text-warn">{t("ล็อก PIN")}</span>}
+                {!u.active && <span className="pill bg-line text-muted">{t("ปิดใช้งาน")}</span>}
               </span>
             </button>
             {openId === u.id && <UserActions user={u} isSelf={u.id === selfId} />}
@@ -104,12 +109,13 @@ function AddUser() {
   const [role, setRole] = useState<Role>("operation");
   const [pin, setPin] = useState("");
   const { pending, error, done, run } = useAction();
+  const { t } = useT();
 
   if (!open) {
     return (
       <>
         <button type="button" className="btn btn-primary w-full" onClick={() => setOpen(true)}>
-          + เพิ่มผู้ใช้
+          {t("+ เพิ่มผู้ใช้")}
         </button>
         {done && <p role="status" className="mt-2 text-sm text-ok">✓ {done}</p>}
       </>
@@ -120,7 +126,7 @@ function AddUser() {
       className="card grid gap-3 p-4"
       onSubmit={(e) => {
         e.preventDefault();
-        run(() => createUserAction({ login, name, role, pin }), `เพิ่ม ${login} แล้ว แจ้ง PIN ให้ผู้ใช้โดยตรง`, () => {
+        run(() => createUserAction({ login, name, role, pin }), t("เพิ่ม {login} แล้ว แจ้ง PIN ให้ผู้ใช้โดยตรง", { login }), () => {
           setOpen(false);
           setLogin("");
           setName("");
@@ -129,20 +135,20 @@ function AddUser() {
         });
       }}
     >
-      <h2 className="font-semibold">ผู้ใช้ใหม่</h2>
+      <h2 className="font-semibold">{t("ผู้ใช้ใหม่")}</h2>
       <div className="grid grid-cols-2 gap-2">
         <label className="grid gap-1 text-sm">
-          <span className="text-muted">ชื่อผู้ใช้ (ใช้เข้าระบบ)</span>
-          <input className="input" autoCapitalize="none" value={login} onChange={(e) => setLogin(e.target.value)} placeholder="เช่น nok" />
+          <span className="text-muted">{t("ชื่อผู้ใช้ (ใช้เข้าระบบ)")}</span>
+          <input className="input" autoCapitalize="none" value={login} onChange={(e) => setLogin(e.target.value)} placeholder={t("เช่น nok")} />
         </label>
         <label className="grid gap-1 text-sm">
-          <span className="text-muted">ชื่อที่แสดง</span>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="เช่น นก" />
+          <span className="text-muted">{t("ชื่อที่แสดง")}</span>
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("เช่น นก")} />
         </label>
       </div>
       <RolePicker value={role} onChange={setRole} />
       <label className="grid gap-1 text-sm">
-        <span className="text-muted">PIN 6 หลัก</span>
+        <span className="text-muted">{t("PIN 6 หลัก")}</span>
         <input
           className="input num"
           inputMode="numeric"
@@ -155,10 +161,10 @@ function AddUser() {
       {error && <p role="alert" className="text-sm text-bad">{error}</p>}
       <div className="grid grid-cols-2 gap-2">
         <button type="button" className="btn" onClick={() => setOpen(false)} disabled={pending}>
-          ยกเลิก
+          {t("ยกเลิก")}
         </button>
         <button type="submit" className="btn btn-primary" disabled={pending || !login.trim() || !name.trim() || !pinOk(pin)}>
-          เพิ่มผู้ใช้
+          {t("เพิ่มผู้ใช้")}
         </button>
       </div>
     </form>
@@ -170,13 +176,14 @@ function UserActions({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
   const [role, setRole] = useState<Role>(user.role);
   const [pin, setPin] = useState("");
   const { pending, error, done, run } = useAction();
+  const { t } = useT();
   const changed = name.trim() !== user.name || role !== user.role;
 
   return (
     <div className="grid gap-4 bg-paper px-4 py-4">
       <div className="grid gap-2">
         <label className="grid gap-1 text-sm">
-          <span className="text-muted">ชื่อที่แสดง</span>
+          <span className="text-muted">{t("ชื่อที่แสดง")}</span>
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
         </label>
         {!isSelf && <RolePicker value={role} onChange={setRole} />}
@@ -185,34 +192,34 @@ function UserActions({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
             type="button"
             className="btn btn-primary"
             disabled={pending || !name.trim()}
-            onClick={() => run(() => updateUserAction(user.id, { name, role }), "บันทึกแล้ว")}
+            onClick={() => run(() => updateUserAction(user.id, { name, role }), t("บันทึกแล้ว"))}
           >
-            บันทึกการเปลี่ยนแปลง
+            {t("บันทึกการเปลี่ยนแปลง")}
           </button>
         )}
-        {role !== user.role && <p className="text-sm text-muted">เปลี่ยนบทบาทแล้ว ผู้ใช้ต้องเข้าระบบใหม่ทุกเครื่อง</p>}
+        {role !== user.role && <p className="text-sm text-muted">{t("เปลี่ยนบทบาทแล้ว ผู้ใช้ต้องเข้าระบบใหม่ทุกเครื่อง")}</p>}
       </div>
 
       <div className="grid gap-2">
-        <span className="text-sm text-muted">ตั้ง PIN ใหม่ (ปลดล็อกและออกจากระบบทุกเครื่อง)</span>
+        <span className="text-sm text-muted">{t("ตั้ง PIN ใหม่ (ปลดล็อกและออกจากระบบทุกเครื่อง)")}</span>
         <div className="flex gap-2">
           <input
             className="input num flex-1"
             inputMode="numeric"
             maxLength={6}
             autoComplete="off"
-            placeholder="PIN 6 หลัก"
+            placeholder={t("PIN 6 หลัก")}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-            aria-label={`PIN ใหม่ของ ${user.name}`}
+            aria-label={t("PIN ใหม่ของ {name}", { name: user.name })}
           />
           <button
             type="button"
             className="btn"
             disabled={pending || !pinOk(pin)}
-            onClick={() => run(() => resetPinAction(user.id, pin), "ตั้ง PIN ใหม่แล้ว", () => setPin(""))}
+            onClick={() => run(() => resetPinAction(user.id, pin), t("ตั้ง PIN ใหม่แล้ว"), () => setPin(""))}
           >
-            ตั้ง PIN
+            {t("ตั้ง PIN")}
           </button>
         </div>
       </div>
@@ -223,9 +230,9 @@ function UserActions({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
             type="button"
             className="btn"
             disabled={pending || !user.active}
-            onClick={() => run(() => revokeSessionsAction(user.id), "ออกจากระบบทุกเครื่องแล้ว")}
+            onClick={() => run(() => revokeSessionsAction(user.id), t("ออกจากระบบทุกเครื่องแล้ว"))}
           >
-            ออกจากระบบทุกเครื่อง
+            {t("ออกจากระบบทุกเครื่อง")}
           </button>
           <button
             type="button"
@@ -234,11 +241,11 @@ function UserActions({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
             onClick={() =>
               run(
                 () => setUserActiveAction(user.id, !user.active),
-                user.active ? "ปิดบัญชีและตัด session ทุกเครื่องแล้ว" : "เปิดบัญชีแล้ว",
+                user.active ? t("ปิดบัญชีและตัด session ทุกเครื่องแล้ว") : t("เปิดบัญชีแล้ว"),
               )
             }
           >
-            {user.active ? "ปิดบัญชี" : "เปิดบัญชีอีกครั้ง"}
+            {user.active ? t("ปิดบัญชี") : t("เปิดบัญชีอีกครั้ง")}
           </button>
         </div>
       )}

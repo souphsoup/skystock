@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { replyLine, sourceName, verifySignature, type LineSource } from "@/lib/line";
 import { deactivateLineSource, lineOutletId, registerLineSource } from "@/lib/notify";
+import { tk, translate } from "@/i18n";
 
 // LINE Developers console › Messaging API › Webhook URL = https://<app>/api/line/webhook
 // Adding the bot to a group (or a user adding it as a friend) registers that chat as a
@@ -14,8 +15,11 @@ interface LineEvent {
   source?: LineSource;
 }
 
-const REGISTERED =
-  "เชื่อมแชตนี้กับ SOP-Stock แล้ว\nรอ Admin เปิดรับ \"สรุปสต๊อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า";
+// The chat's language is unknown when it registers (it starts as Thai), so reply in both.
+const REGISTERED_TH = tk(
+  "เชื่อมแชตนี้กับ SOP-Stock แล้ว\nรอ Admin เปิดรับ \"สรุปสต๊อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า",
+);
+const REGISTERED = `${REGISTERED_TH}\n\n${translate("en", REGISTERED_TH)}`;
 
 export async function POST(req: Request) {
   const raw = await req.text();

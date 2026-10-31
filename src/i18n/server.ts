@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { getUser } from "@/lib/session";
-import { isLang, LANG_COOKIE, makeT, translateError, type Lang, type TFn } from "./index";
+import { isLang, LANG_COOKIE, makeT, tk, translateError, type Lang, type TFn } from "./index";
 import { HttpError } from "@/lib/session";
 
 /** Signed in: the user's own language. Signed out (login page): the last language used on this device. */
@@ -18,7 +18,7 @@ export async function getT(): Promise<{ lang: Lang; t: TFn }> {
 }
 
 /** Message for an HttpError (or a generic one) in the caller's language. */
-export async function errorMessage(e: unknown, fallback = "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง"): Promise<string> {
+export async function errorMessage(e: unknown, fallback = tk("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง")): Promise<string> {
   const lang = await getLang();
   if (e instanceof HttpError) return translateError(lang, e.message, e.params);
   return translateError(lang, fallback);

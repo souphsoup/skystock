@@ -2,6 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { HttpError } from "./session";
 import { errorMessage } from "@/i18n/server";
+import { tk } from "@/i18n";
 
 /** Wrap a route handler: HttpError → JSON error with its status; anything else → 500. */
 export async function handle(fn: () => Promise<unknown>): Promise<Response> {
@@ -11,7 +12,7 @@ export async function handle(fn: () => Promise<unknown>): Promise<Response> {
   } catch (e) {
     if (e instanceof HttpError) return NextResponse.json({ error: await errorMessage(e) }, { status: e.status });
     console.error(e);
-    return NextResponse.json({ error: await errorMessage(e, "เกิดข้อผิดพลาดในระบบ ลองใหม่อีกครั้ง") }, { status: 500 });
+    return NextResponse.json({ error: await errorMessage(e, tk("เกิดข้อผิดพลาดในระบบ ลองใหม่อีกครั้ง")) }, { status: 500 });
   }
 }
 

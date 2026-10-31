@@ -12,8 +12,9 @@ const HTTP = /new HttpError\(\s*\d+\s*,\s*(["'`])((?:\\.|(?!\1)[^\\])*)\1/g;
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => {
     const p = join(dir, f);
-    if (statSync(p).isDirectory()) return p.includes("i18n") ? [] : files(p);
-    return /\.tsx?$/.test(f) ? [p] : [];
+    if (statSync(p).isDirectory()) return p.endsWith(join("i18n", "en")) ? [] : files(p);
+    // src/i18n/index.ts only has examples in its doc comment
+    return /\.tsx?$/.test(f) && !p.endsWith(join("i18n", "index.ts")) ? [p] : [];
   });
 }
 

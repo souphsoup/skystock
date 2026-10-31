@@ -1,6 +1,7 @@
 // Types shared by server and client (no server-only imports here).
 
 import { tk } from "@/i18n";
+import type { SheetProposal } from "./proposal-types";
 
 export type Role = "operation" | "supervisor" | "manager" | "admin";
 export type CountStatus = "draft" | "submitted" | "recount" | "approved";
@@ -48,6 +49,8 @@ export interface Sheet {
   businessDate: string;
   status: CountStatus;
   lines: SheetLine[];
+  /** items staff proposed for this location (missing on sheets cached before this field existed) */
+  proposals?: SheetProposal[];
   fetchedAt: number;
 }
 
