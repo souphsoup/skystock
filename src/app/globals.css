@@ -149,3 +149,19 @@ body {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* หน้า "ติดตั้งก่อนใช้งาน" บนมือถือ: สคริปต์ใน layout ใส่ data-install ที่ <html> ก่อนวาดหน้าแรก */
+#install-gate,
+#install-gate [data-for] {
+  display: none;
+}
+html[data-install] body > :not(#install-gate) {
+  display: none;
+}
+html[data-install] #install-gate,
+html[data-install="ios"] #install-gate [data-for="ios"],
+html[data-install="android"] #install-gate [data-for="android"],
+html[data-install="line"] #install-gate [data-for="line"],
+html[data-install="inapp"] #install-gate [data-for="inapp"] {
+  display: block;
+}

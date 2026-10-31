@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai, IBM_Plex_Mono } from "next/font/google";
 import { RegisterSW } from "@/components/register-sw";
+import { InstallGate } from "@/components/install-gate";
+import { INSTALL_GATE_SCRIPT } from "@/components/install-gate-script";
 import { I18nProvider } from "@/i18n/client";
 import { getLang } from "@/i18n/server";
 import "./globals.css";
@@ -37,9 +39,16 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const lang = await getLang();
   return (
-    <html lang={lang} className={`${plexThai.variable} ${plexMono.variable} h-full antialiased`}>
+    // suppressHydrationWarning: the inline script may add data-install before React hydrates.
+    <html lang={lang} className={`${plexThai.variable} ${plexMono.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: INSTALL_GATE_SCRIPT }} />
+      </head>
       <body className="min-h-full">
-        <I18nProvider lang={lang}>{children}</I18nProvider>
+        <I18nProvider lang={lang}>
+          <InstallGate />
+          {children}
+        </I18nProvider>
         <RegisterSW />
       </body>
     </html>

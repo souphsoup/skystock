@@ -73,3 +73,6 @@ export const IconSearch = (p: P) => (
 export const IconDownload = (p: P) => (
   <Svg {...p}><path d="M12 3v12" /><path d="M7 10l5 5 5-5" /><path d="M4 21h16" /></Svg>
 );
+export const IconShare = (p: P) => (
+  <Svg {...p}><path d="M12 3v12" /><path d="M8 7l4-4 4 4" /><path d="M6 11H5v10h14V11h-1" /></Svg>
+);
