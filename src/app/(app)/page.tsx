@@ -62,6 +62,20 @@ export default async function HomePage() {
             {next.status === "draft" ? t("นับต่อ") : next.status === "recount" ? t("เริ่มนับซ้ำ") : t("เริ่มนับ")}
           </Link>
         </section>
+      ) : tasks.length === 0 ? (
+        <section className="card mb-5 p-5">
+          <h2 className="font-bold">{t("ยังไม่มีรายการสินค้าให้นับ")}</h2>
+          <p className="mt-1 text-sm text-muted">
+            {can.settings(user.role)
+              ? t("เพิ่มวัตถุดิบในหน้าตั้งค่าก่อน แล้วงานนับจะขึ้นที่นี่")
+              : t("ให้หัวหน้าหรือแอดมินเพิ่มรายการวัตถุดิบก่อน")}
+          </p>
+          {can.settings(user.role) && (
+            <Link href="/settings" className="btn btn-primary mt-4 w-full">
+              {t("ไปหน้าตั้งค่า")}
+            </Link>
+          )}
+        </section>
       ) : (
         <section className="card mb-5 flex items-center gap-3 p-5">
           <span className="text-2xl text-ok" aria-hidden>
@@ -76,7 +90,7 @@ export default async function HomePage() {
 
       <section className="mb-5 grid grid-cols-2 gap-3" aria-label={t("งานหลัก")}>
         <Link
-          href={`/count/${(next ?? tasks[0])?.locationId ?? ""}`}
+          href={tasks.length ? `/count/${(next ?? tasks[0]).locationId}` : can.settings(user.role) ? "/settings" : "/"}
           className="card flex min-h-28 flex-col justify-between border-accent/40 p-4"
         >
           <IconBox className="text-accent" width={28} height={28} />
