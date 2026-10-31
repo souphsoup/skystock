@@ -68,6 +68,16 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* No double-tap-zoom wait on taps */
+a,
+button,
+label,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
 body {
   background: var(--paper);
   color: var(--ink);
@@ -89,6 +99,13 @@ body {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 16px;
+  }
+  /* Tap feedback for cards that are links (the system tap highlight is turned off above) */
+  a.card {
+    transition: transform 0.05s;
+  }
+  a.card:active {
+    transform: scale(0.98);
   }
   /* ปุ่มสูงอย่างน้อย 48px ใส่ถุงมือก็กดได้ */
   .btn {

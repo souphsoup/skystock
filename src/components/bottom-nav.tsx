@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { IconBell, IconChart, IconClipboard, IconHome, IconUser } from "./icons";
 
@@ -20,28 +20,38 @@ export function BottomNav({ items }: { items: NavItem[] }) {
       <ul className="mx-auto flex max-w-xl">
         {items.map((it) => {
           const active = it.href === "/" ? path === "/" : path.startsWith(it.href);
-          const Icon = ICONS[it.icon];
           return (
             <li key={it.href} className="flex-1">
               <Link
                 href={it.href}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-medium ${
-                  active ? "text-accent" : "text-muted"
-                }`}
+                className="relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-medium active:bg-line/40"
               >
-                <Icon />
-                {it.label}
-                {!!it.badge && (
-                  <span className="num absolute top-1.5 left-1/2 ml-2 min-w-5 rounded-full bg-bad px-1 text-center text-[11px] leading-5 text-surface">
-                    {it.badge}
-                  </span>
-                )}
+                <NavLabel item={it} active={active} />
               </Link>
             </li>
           );
         })}
       </ul>
     </nav>
+  );
+}
+
+/** Lights the tab up on tap, before the new page arrives (must sit inside <Link>). */
+function NavLabel({ item, active }: { item: NavItem; active: boolean }) {
+  const { pending } = useLinkStatus();
+  const Icon = ICONS[item.icon];
+  return (
+    <>
+      <span className={`flex flex-col items-center gap-0.5 ${active || pending ? "text-accent" : "text-muted"}`}>
+        <Icon />
+        {item.label}
+      </span>
+      {!!item.badge && (
+        <span className="num absolute top-1.5 left-1/2 ml-2 min-w-5 rounded-full bg-bad px-1 text-center text-[11px] leading-5 text-surface">
+          {item.badge}
+        </span>
+      )}
+    </>
   );
 }
