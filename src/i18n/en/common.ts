@@ -23,6 +23,9 @@ const common: Record<string, string> = {
     "{n, # entry is, # entries are} not synced yet. Get a signal and wait for sync to finish before signing out.",
   "กำลังออกจากระบบ…": "Signing out…",
   "ออกจากระบบ": "Sign out",
+  // update banner
+  "มีอัปเดตใหม่ แตะรีเฟรชเพื่อใช้เวอร์ชันล่าสุด": "A new version is out. Tap Refresh to use it.",
+  "รีเฟรช": "Refresh",
   // login
   "นับสต๊อกครัวและบาร์": "Kitchen & bar stock counts",
   "กรอกชื่อผู้ใช้และ PIN 6 หลัก": "Enter your username and 6-digit PIN",

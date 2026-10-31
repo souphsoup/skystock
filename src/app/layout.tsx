@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai, IBM_Plex_Mono } from "next/font/google";
 import { RegisterSW } from "@/components/register-sw";
+import { UpdateBanner } from "@/components/update-banner";
 import { InstallGate } from "@/components/install-gate";
 import { INSTALL_GATE_SCRIPT } from "@/components/install-gate-script";
 import { I18nProvider } from "@/i18n/client";
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <I18nProvider lang={lang}>
           <InstallGate />
           {children}
+          <UpdateBanner />
         </I18nProvider>
         <RegisterSW />
       </body>
