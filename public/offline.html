@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ออฟไลน์ · SOP-Stock</title>
+    <style>
+      :root { --paper:#f3f5f8; --surface:#fff; --ink:#15212f; --muted:#5b6776; --line:#d9dfe6; --accent:#a8731f; }
+      @media (prefers-color-scheme: dark) {
+        :root { --paper:#0d141d; --surface:#151f2b; --ink:#e5eaf0; --muted:#9aa6b5; --line:#273444; --accent:#dda552; }
+      }
+      body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--paper); color:var(--ink);
+        font-family:"IBM Plex Sans Thai","Sukhumvit Set",Tahoma,system-ui,sans-serif; padding:24px; box-sizing:border-box; }
+      .card { max-width:380px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px; }
+      h1 { font-size:20px; margin:0 0 8px; }
+      p { color:var(--muted); margin:0 0 16px; line-height:1.6; }
+      button { min-height:48px; width:100%; border-radius:12px; border:0; background:var(--accent); color:#fff; font:inherit; font-weight:600; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>ตอนนี้ไม่มีสัญญาณ</h1>
+      <p>หน้านี้ยังไม่เคยเปิดในเครื่องนี้ จึงเปิดแบบออฟไลน์ไม่ได้ ถ้ากำลังนับอยู่ ยอดที่บันทึกไว้ยังอยู่ในเครื่องครบ กลับมาออนไลน์แล้วระบบจะซิงก์ให้เอง</p>
+      <button onclick="location.reload()">ลองอีกครั้ง</button>
+    </div>
+  </body>
+</html>

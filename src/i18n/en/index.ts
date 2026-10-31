@@ -1,0 +1,14 @@
+// English dictionary, one file per area of the app. Keys are the exact Thai text.
+import common from "./common";
+import staff from "./staff";
+import reports from "./reports";
+import notify from "./notify";
+import settings from "./settings";
+
+export const en: Record<string, string> = {
+  ...common,
+  ...staff,
+  ...reports,
+  ...notify,
+  ...settings,
+};
