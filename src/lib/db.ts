@@ -21,6 +21,9 @@ async function createPostgres(url: string): Promise<Db> {
   const sql = postgres(url, {
     onnotice: () => {}, // "already exists, skipping" etc. from migrations would fill the Vercel logs
     prepare: false, // Supabase transaction pooler does not support prepared statements
+    // One query at a time per connection: pipelined queries through Supavisor's transaction
+    // pooler stall (backend waits in ClientRead forever) and every signed-in page hangs.
+    max_pipeline: 1,
     max: 5,
     types: {
       numeric: { to: NUMERIC, from: [NUMERIC], serialize: String, parse: Number },
