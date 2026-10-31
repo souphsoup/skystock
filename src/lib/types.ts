@@ -19,6 +19,7 @@ export const can = {
   count: (r: Role) => r === "operation" || r === "supervisor" || r === "admin",
   review: (r: Role) => r === "supervisor" || r === "admin",
   dashboard: (r: Role) => r !== "operation",
+  history: (r: Role) => r !== "operation",
   settings: (r: Role) => r === "supervisor" || r === "admin",
   users: (r: Role) => r === "admin",
 };

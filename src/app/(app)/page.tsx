@@ -4,7 +4,8 @@ import { requireUser } from "@/lib/session";
 import { reviewQueue, stockAlerts, todayTasks } from "@/lib/stock";
 import { businessDate, fmtWeekday } from "@/lib/dates";
 import { can } from "@/lib/types";
-import { CountStatusPill, fmtQty } from "@/components/status";
+import { fmtQty } from "@/components/status";
+import { TaskList } from "@/components/task-list";
 import { SyncBadge } from "@/components/sync-badge";
 import { IconAlert, IconBox, IconSwap, IconTrash, IconTruck } from "@/components/icons";
 import { getT } from "@/i18n/server";
@@ -90,7 +91,15 @@ export default async function HomePage() {
 
       <section className="mb-5 grid grid-cols-2 gap-3" aria-label={t("งานหลัก")}>
         <Link
-          href={tasks.length ? `/count/${(next ?? tasks[0]).locationId}` : can.settings(user.role) ? "/settings" : "/"}
+          href={
+            tasks.length > 1
+              ? "/count"
+              : tasks.length
+                ? `/count/${tasks[0].locationId}`
+                : can.settings(user.role)
+                  ? "/settings"
+                  : "/"
+          }
           className="card flex min-h-28 flex-col justify-between border-accent/40 p-4"
         >
           <IconBox className="text-accent" width={28} height={28} />
@@ -155,21 +164,7 @@ export default async function HomePage() {
         <h2 id="today-points" className="mb-2 text-sm font-semibold text-muted">
           {t("จุดนับวันนี้")}
         </h2>
-        <ul className="card divide-y divide-line">
-          {tasks.map((task) => (
-            <li key={task.locationId}>
-              <Link href={`/count/${task.locationId}`} className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">
-                <span>
-                  <b>{task.locationName}</b>
-                  <span className="block text-sm text-muted">
-                    {t("{counted}/{items} รายการ · ก่อน {time}", { counted: task.counted, items: task.items, time: task.dueTime })}
-                  </span>
-                </span>
-                <CountStatusPill status={task.status} lang={lang} />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <TaskList tasks={tasks} />
       </section>
     </main>
   );

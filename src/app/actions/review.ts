@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { HttpError, requireApiUser } from "@/lib/session";
-import { adjustLine, approveMatched, confirmLine, requestRecount } from "@/lib/stock";
+import { adjustLine, approveMatched, confirmLine, recountMatched, requestRecount } from "@/lib/stock";
 import { can } from "@/lib/types";
 import { errorMessage, getT } from "@/i18n/server";
 
@@ -36,4 +36,8 @@ export async function adjustLineAction(countId: number, itemId: number, counted:
 
 export async function approveMatchedAction(countId: number) {
   return run(countId, (u) => approveMatched(u, countId));
+}
+
+export async function recountMatchedAction(countId: number) {
+  return run(countId, (u) => recountMatched(u, countId));
 }

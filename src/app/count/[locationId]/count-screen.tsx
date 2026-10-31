@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { editKey, localDb, rememberSheet, type PendingEdit } from "@/client/local-db";
 import { clearSyncError, fetchSheet, onSheet, scheduleSync, startSync, useSyncState } from "@/client/sync";
@@ -20,6 +21,8 @@ export function CountScreen({ initial }: { initial: Sheet }) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [category, setCategory] = useState<string>("all");
   const [query, setQuery] = useState("");
+  // บันทึกจากคีย์บอร์ด → รายการถัดไปเปิดช่องกรอกค้างไว้ คีย์บอร์ดไม่ต้องหุบ/เด้งใหม่
+  const [keypad, setKeypad] = useState(false);
   const sync = useSyncState();
   const { t } = useT();
   const cardRef = useRef<HTMLElement>(null);
@@ -131,11 +134,20 @@ export function CountScreen({ initial }: { initial: Sheet }) {
     scheduleSync();
   }
 
-  function goNext(after: SheetLine) {
+  function goNext(after: SheetLine, keepKeyboard: boolean) {
     const idx = visible.findIndex((l) => l.itemId === after.itemId);
     const rest = [...visible.slice(idx + 1), ...visible.slice(0, idx)];
     const next = rest.find((l) => l.editable && l.counted === null && l.itemId !== after.itemId);
     setSelectedId(next?.itemId ?? after.itemId);
+    setKeypad(keepKeyboard && !!next);
+    if (!keepKeyboard) cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // นับครบแล้ว: หุบคีย์บอร์ดให้เห็นปุ่มส่งยอด
+    else if (!next) (document.activeElement as HTMLElement | null)?.blur();
+  }
+
+  function pick(id: number) {
+    setKeypad(false);
+    setSelectedId(id);
     cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -226,10 +238,12 @@ export function CountScreen({ initial }: { initial: Sheet }) {
             ref={cardRef}
             key={selected.itemId}
             line={selected}
+            keypad={keypad}
             onChange={(patch) => update(selected, patch)}
-            onDone={(counted) => {
+            onDone={(counted, keepKeyboard) => {
+              // Render the next card and focus its input inside this tap, so the keyboard stays up.
               void update(selected, { counted });
-              goNext(selected);
+              flushSync(() => goNext(selected, keepKeyboard));
             }}
           />
         )}
@@ -251,6 +265,7 @@ export function CountScreen({ initial }: { initial: Sheet }) {
               <button
                 type="button"
                 onClick={() => {
+                  setKeypad(false);
                   setSelectedId(l.itemId);
                   cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
@@ -282,8 +297,7 @@ export function CountScreen({ initial }: { initial: Sheet }) {
           onSent={() => setQuery("")}
           onPick={(id) => {
             setQuery("");
-            setSelectedId(id);
-            cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            pick(id);
           }}
         />
       </div>
@@ -335,23 +349,28 @@ function LineState({ line }: { line: SheetLine }) {
 
 function LineCard({
   line,
+  keypad,
   onChange,
   onDone,
   ref,
 }: {
   line: SheetLine;
+  /** มาจากการกดบันทึกด้วยคีย์บอร์ด: เปิดช่องกรอกและโฟกัสทันที */
+  keypad: boolean;
   onChange: (patch: Partial<Pick<SheetLine, "inQty" | "outQty" | "counted">>) => void;
-  onDone: (counted: number) => void;
+  onDone: (counted: number, keepKeyboard: boolean) => void;
   ref: React.Ref<HTMLElement>;
 }) {
   const { t } = useT();
   const expected = expectedOf(line);
   // Blind count and first-ever counts have no system figure: always type the real count.
   const manualOnly = expected === null;
-  const [editing, setEditing] = useState(manualOnly);
+  const [editing, setEditing] = useState(manualOnly || keypad);
   const [text, setText] = useState(line.counted !== null ? String(line.counted) : expected !== null ? String(Math.max(0, expected)) : "");
+  const inputRef = useRef<HTMLInputElement>(null);
   const parsed = text.trim() === "" ? NaN : Number(text.replace(",", "."));
   const validManual = Number.isFinite(parsed) && parsed >= 0;
+  const save = () => onDone(Math.round(parsed * 100) / 100, document.activeElement === inputRef.current);
 
   return (
     <section ref={ref} className="card mb-4 scroll-mt-32 p-4" aria-label={t("นับ {name}", { name: itemLabel(line) })}>
@@ -434,16 +453,18 @@ function LineCard({
         {editing ? (
           <div className="mt-3 flex gap-2">
             <input
+              ref={inputRef}
               className="input num flex-1 text-xl font-semibold"
               inputMode="decimal"
+              enterKeyHint="next"
               aria-label={t("ยอดที่นับได้จริง")}
               placeholder={t("นับได้จริง")}
               value={text}
-              autoFocus={!manualOnly}
+              autoFocus={!manualOnly || keypad}
               onFocus={(e) => e.currentTarget.select()}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && validManual) onDone(Math.round(parsed * 100) / 100);
+                if (e.key === "Enter" && validManual) save();
               }}
             />
             {!manualOnly && (
@@ -455,7 +476,9 @@ function LineCard({
               type="button"
               className="btn btn-primary"
               disabled={!validManual}
-              onClick={() => onDone(Math.round(parsed * 100) / 100)}
+              // Don't take focus from the input, otherwise the keyboard starts closing on tap.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={save}
             >
               {t("บันทึก")}
             </button>
@@ -476,7 +499,7 @@ function LineCard({
               type="button"
               className="btn btn-ok text-lg"
               disabled={expected === null || expected < 0}
-              onClick={() => expected !== null && onDone(expected)}
+              onClick={() => expected !== null && onDone(expected, false)}
             >
               ✓ {t("ตรงกับของจริง")}
             </button>

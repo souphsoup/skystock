@@ -6,7 +6,7 @@ import { fmtTime, fmtWeekday } from "@/lib/dates";
 import { can } from "@/lib/types";
 import { CountStatusPill, fmtQty } from "@/components/status";
 import { IconBack } from "@/components/icons";
-import { ApproveMatchedButton, FlaggedLine } from "./review-actions";
+import { ApproveMatchedButton, FlaggedLine, RecountLineButton } from "./review-actions";
 import { getT } from "@/i18n/server";
 
 export default async function ReviewPage({ params }: PageProps<"/review/[countId]">) {
@@ -115,6 +115,11 @@ export default async function ReviewPage({ params }: PageProps<"/review/[countId
                   <td className="px-4 py-2">
                     {l.name} <span className="text-muted">({l.unit})</span>
                     {l.variance ? <span className="ml-1 text-warn">{t("ต่าง {n}", { n: fmtQty(l.variance) })}</span> : null}
+                    {active && l.status === "ok" && (
+                      <div className="mt-1">
+                        <RecountLineButton countId={review.countId} itemId={l.itemId} />
+                      </div>
+                    )}
                   </td>
                   <td className="num px-2 py-2 text-right">{fmtQty(l.inQty)}</td>
                   <td className="num px-2 py-2 text-right">{fmtQty(l.outQty)}</td>

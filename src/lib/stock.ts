@@ -466,6 +466,21 @@ export async function approveMatched(user: User, countId: number) {
   });
 }
 
+/** ตีกลับทุกรายการที่ตรงกันให้คนนับเช็คใหม่ */
+export async function recountMatched(user: User, countId: number) {
+  const db = await getDb();
+  await db.tx(async (tx) => {
+    await reviewableCount(tx, user, countId);
+    const r = await tx.query(
+      `update count_lines set status = 'recount' where count_id = $1 and status = 'ok' returning item_id`,
+      [countId],
+    );
+    if (!r.length) return;
+    await tx.query(`update counts set status = 'recount' where id = $1`, [countId]);
+    await audit(tx, user.id, "count.recount_matched", "count", countId, null, { lines: r.length });
+  });
+}
+
 export interface QueueItem {
   countId: number;
   locationName: string;

@@ -132,6 +132,16 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             </Link>
           </section>
 
+          <Link href="/history" className="card flex min-h-14 items-center justify-between px-4">
+            <span>
+              <b className="block">{t("ประวัติการแก้ไข")}</b>
+              <span className="text-sm text-muted">{t("ใครทำอะไร เมื่อไหร่")}</span>
+            </span>
+            <span className="text-muted" aria-hidden>
+              ›
+            </span>
+          </Link>
+
           {alerts.length > 0 && (
             <section className="card p-4" aria-labelledby="reorder">
               <h2 id="reorder" className="mb-2 font-semibold">

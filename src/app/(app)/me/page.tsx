@@ -39,6 +39,17 @@ export default async function MePage() {
           </span>
         </Link>
       )}
+      {can.history(user.role) && (
+        <Link href="/history" className="card mb-4 flex min-h-14 items-center justify-between px-4">
+          <span>
+            <b className="block">{t("ประวัติการแก้ไข")}</b>
+            <span className="text-sm text-muted">{t("ใครทำอะไร เมื่อไหร่")}</span>
+          </span>
+          <span className="text-muted" aria-hidden>
+            ›
+          </span>
+        </Link>
+      )}
       <section className="mb-4" aria-labelledby="lang-h">
         <h2 id="lang-h" className="mb-2 text-sm text-muted">
           {t("ภาษา")} / Language

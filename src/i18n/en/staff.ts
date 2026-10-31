@@ -68,6 +68,7 @@ const staff: Record<string, string> = {
   "รอตรวจและอนุมัติ": "Waiting for review and approval",
   "{location} (ต้องดู {n})": "{location} ({n} to check)",
   "จุดนับวันนี้": "Today's locations",
+  "เลือกจุดที่จะนับ": "Choose a location to count",
   "{counted}/{items} รายการ · ก่อน {time}": "{counted}/{items, # item, # items} · by {time}",
 
   // count sheet

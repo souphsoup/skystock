@@ -5,6 +5,7 @@ import reports from "./reports";
 import notify from "./notify";
 import settings from "./settings";
 import proposals from "./proposals";
+import history from "./history";
 
 export const en: Record<string, string> = {
   ...common,
@@ -13,4 +14,5 @@ export const en: Record<string, string> = {
   ...notify,
   ...settings,
   ...proposals,
+  ...history,
 };

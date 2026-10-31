@@ -46,8 +46,9 @@ const reports: Record<string, string> = {
   "ยืนยันยอด": "Confirm",
   "ให้นับซ้ำ": "Ask for recount",
   "แก้ยอดเองพร้อมเหตุผล": "Adjust the count with a reason",
-  "กำลังอนุมัติ…": "Approving…",
   "อนุมัติ {n} รายการที่ตรงกัน": "Approve {n, # matched item, # matched items}",
+  "ตีกลับ": "Send back",
+  "ตีกลับ {n} รายการที่ตรงกันให้พนักงานนับใหม่?": "Send {n, # matched item, # matched items} back to staff for a recount?",
 
   // dashboard
   "วัน": "Day",

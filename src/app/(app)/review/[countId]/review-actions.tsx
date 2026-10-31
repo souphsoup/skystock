@@ -6,6 +6,7 @@ import {
   approveMatchedAction,
   confirmLineAction,
   recountLineAction,
+  recountMatchedAction,
 } from "@/app/actions/review";
 import type { ReviewLine } from "@/lib/stock";
 import { fmtQty, fmtSigned } from "@/components/status";
@@ -123,19 +124,55 @@ export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLi
   );
 }
 
+export function RecountLineButton({ countId, itemId }: { countId: number; itemId: number }) {
+  const { pending, error, run } = useAction();
+  const { t } = useT();
+  return (
+    <>
+      <button
+        type="button"
+        className="btn min-h-9 px-3 text-xs"
+        disabled={pending}
+        onClick={() => run(() => recountLineAction(countId, itemId))}
+      >
+        ↺ {t("ให้นับซ้ำ")}
+      </button>
+      {error && (
+        <p role="alert" className="mt-1 text-xs text-bad">
+          {error}
+        </p>
+      )}
+    </>
+  );
+}
+
 export function ApproveMatchedButton({ countId, count }: { countId: number; count: number }) {
   const { pending, error, run } = useAction();
   const { t } = useT();
   return (
     <div className="safe-bottom sticky bottom-16 z-10 -mx-4 bg-paper/95 px-4 py-3 backdrop-blur">
-      <button
-        type="button"
-        className="btn btn-primary w-full text-lg"
-        disabled={pending}
-        onClick={() => run(() => approveMatchedAction(countId))}
-      >
-        {pending ? t("กำลังอนุมัติ…") : t("อนุมัติ {n} รายการที่ตรงกัน", { n: count })}
-      </button>
+      <div className="grid grid-cols-[auto_1fr] gap-2">
+        <button
+          type="button"
+          className="btn"
+          disabled={pending}
+          onClick={() => {
+            if (confirm(t("ตีกลับ {n} รายการที่ตรงกันให้พนักงานนับใหม่?", { n: count }))) {
+              run(() => recountMatchedAction(countId));
+            }
+          }}
+        >
+          ↺ {t("ตีกลับ")}
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary text-lg"
+          disabled={pending}
+          onClick={() => run(() => approveMatchedAction(countId))}
+        >
+          {pending ? t("กำลังบันทึก…") : t("อนุมัติ {n} รายการที่ตรงกัน", { n: count })}
+        </button>
+      </div>
       {error && (
         <p role="alert" className="mt-2 text-sm text-bad">
           {error}
