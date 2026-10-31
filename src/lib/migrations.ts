@@ -266,4 +266,23 @@ begin
 end $$;
 `,
   },
+  {
+    id: "007_usage",
+    sql: `
+-- ติดตามการใช้งานแอป (หน้า /usage): เข้าใช้ล่าสุดต่อผู้ใช้ และประวัติการเข้าสู่ระบบ ทั้งสำเร็จและไม่สำเร็จ
+alter table users add column last_seen_at timestamptz;
+create table login_events (
+  id bigserial primary key,
+  at timestamptz not null default now(),
+  user_id int references users(id), -- null = ชื่อผู้ใช้ที่ไม่มีในระบบ
+  login text not null,
+  ok boolean not null,
+  reason text check (reason in ('bad_pin','locked','unknown')),
+  user_agent text
+);
+create index login_events_at_idx on login_events (at desc);
+create index login_events_user_idx on login_events (user_id, at desc);
+alter table login_events enable row level security;
+`,
+  },
 ];

@@ -50,6 +50,17 @@ export default async function MePage() {
           </span>
         </Link>
       )}
+      {can.usage(user.role) && (
+        <Link href="/usage" className="card mb-4 flex min-h-14 items-center justify-between px-4">
+          <span>
+            <b className="block">{t("การใช้งานแอป")}</b>
+            <span className="text-sm text-muted">{t("ใครเข้าใช้ นับไปเท่าไหร่ วันนี้")}</span>
+          </span>
+          <span className="text-muted" aria-hidden>
+            ›
+          </span>
+        </Link>
+      )}
       <section className="mb-4" aria-labelledby="lang-h">
         <h2 id="lang-h" className="mb-2 text-sm text-muted">
           {t("ภาษา")} / Language

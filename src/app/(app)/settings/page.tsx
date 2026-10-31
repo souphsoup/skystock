@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/session";
 import { getCatalog } from "@/lib/settings";
 import { can, ROLE_LABEL } from "@/lib/types";
 import { PageHeader } from "@/components/status";
-import { IconBell, IconUser } from "@/components/icons";
+import { IconBell, IconChart, IconUser } from "@/components/icons";
 import { CatalogTree } from "./catalog-tree";
 import { getT } from "@/i18n/server";
 
@@ -28,6 +28,16 @@ export default async function SettingsPage() {
             <span className="flex-1">
               <b className="block">{t("สรุปตอนเช้า")}</b>
               <span className="text-sm text-muted">{t("ส่งเข้า LINE และอีเมล 08:00 น.")}</span>
+            </span>
+            <span className="text-muted" aria-hidden>
+              ›
+            </span>
+          </Link>
+          <Link href="/usage" className="flex min-h-14 items-center gap-3 px-4">
+            <IconChart className="text-accent" />
+            <span className="flex-1">
+              <b className="block">{t("การใช้งานแอป")}</b>
+              <span className="text-sm text-muted">{t("ใครเข้าใช้ นับไปเท่าไหร่ วันนี้")}</span>
             </span>
             <span className="text-muted" aria-hidden>
               ›

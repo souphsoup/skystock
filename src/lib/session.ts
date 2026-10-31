@@ -1,5 +1,6 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
@@ -56,12 +57,15 @@ export async function login(
   const fail = { ok: false as const, error: tk("ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง") };
   if (!u || !u.active) {
     await bcrypt.compare(pin, dummyHash()); // keep timing similar to a real check
+    await logLogin(u?.id ?? null, loginName, "unknown");
     return fail;
   }
   if (u.locked_until && new Date(u.locked_until) > new Date()) {
+    await logLogin(u.id, loginName, "locked");
     return { ok: false, error: tk("ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน {n} นาที"), params: { n: LOCK_MINUTES } };
   }
   if (!(await bcrypt.compare(pin, u.pin_hash))) {
+    await logLogin(u.id, loginName, "bad_pin");
     await db.query(
       `update users set failed_attempts = failed_attempts + 1,
          locked_until = case when failed_attempts + 1 >= $2 then now() + make_interval(mins => $3) end
@@ -70,7 +74,8 @@ export async function login(
     );
     return fail;
   }
-  await db.query(`update users set failed_attempts = 0, locked_until = null where id = $1`, [u.id]);
+  await db.query(`update users set failed_attempts = 0, locked_until = null, last_seen_at = now() where id = $1`, [u.id]);
+  await logLogin(u.id, loginName, null);
 
   const token = await new SignJWT({ sv: u.session_version })
     .setProtectedHeader({ alg: "HS256" })
@@ -87,6 +92,25 @@ export async function login(
   });
   await rememberLang(u.lang);
   return { ok: true, user: { id: u.id, outletId: u.outlet_id, name: u.name, login: u.login, role: u.role, lang: u.lang } };
+}
+
+/** For the usage page (/usage). Written after the response so a slow insert never delays sign-in. */
+async function logLogin(userId: number | null, loginName: string, reason: "bad_pin" | "locked" | "unknown" | null) {
+  const ua = (await headers()).get("user-agent")?.slice(0, 300) ?? null;
+  after(async () => {
+    try {
+      const db = await getDb();
+      await db.query(`insert into login_events (user_id, login, ok, reason, user_agent) values ($1, $2, $3, $4, $5)`, [
+        userId,
+        loginName.trim().toLowerCase().slice(0, 64),
+        reason === null,
+        reason,
+        ua,
+      ]);
+    } catch (e) {
+      console.error("login_events insert failed", e);
+    }
+  });
 }
 
 /** The login page shows the last language used on this device. */
@@ -118,11 +142,32 @@ export const getUser = cache(async (): Promise<User | null> => {
       Number(payload.sub),
     ]);
     if (!u || u.session_version !== payload.sv) return null;
+    touchLastSeen(u.id);
     return { id: u.id, outletId: u.outlet_id, name: u.name, login: u.login, role: u.role, lang: u.lang };
   } catch {
     return null;
   }
 });
+
+/** users.last_seen_at for the usage page: at most one write per user per minute, after the response. */
+function touchLastSeen(userId: number) {
+  try {
+    after(async () => {
+      try {
+        const db = await getDb();
+        await db.query(
+          `update users set last_seen_at = now()
+           where id = $1 and (last_seen_at is null or last_seen_at < now() - interval '1 minute')`,
+          [userId],
+        );
+      } catch (e) {
+        console.error("last_seen_at update failed", e);
+      }
+    });
+  } catch {
+    // called outside a request (no after() scope): skip
+  }
+}
 
 /** For pages: redirect to /login when signed out, or home when the role is not allowed. */
 export async function requireUser(allowed?: (r: Role) => boolean): Promise<User> {

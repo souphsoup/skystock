@@ -22,6 +22,7 @@ export const can = {
   history: (r: Role) => r !== "operation",
   settings: (r: Role) => r === "supervisor" || r === "admin",
   users: (r: Role) => r === "admin",
+  usage: (r: Role) => r === "admin",
 };
 
 export interface SheetLine {
