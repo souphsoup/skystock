@@ -53,7 +53,7 @@ const staff: Record<string, string> = {
   "ให้หัวหน้าหรือแอดมินเพิ่มรายการวัตถุดิบก่อน": "Ask a supervisor or admin to add items first",
   "ไปหน้าตั้งค่า": "Go to Settings",
   "งานหลัก": "Main tasks",
-  "นับสต๊อก": "Count stock",
+  "นับสต็อก": "Count stock",
   "รับของเข้า": "Receive goods",
   "ถ่ายรูปใบส่งของ": "Photo of delivery note",
   "เบิก / โอน": "Issue / Transfer",
@@ -179,14 +179,18 @@ const staff: Record<string, string> = {
 
   // login form
   "ชื่อผู้ใช้": "Username",
-  "เช่น ton": "e.g. ton",
-  "ผู้ใช้ล่าสุดในเครื่องนี้": "Recent users on this device",
   "PIN 6 หลัก": "6-digit PIN",
   "ใส่แล้ว {n} จาก {total} หลัก": "{n} of {total} digits entered",
   "ล้าง": "Clear",
   "ลบตัวสุดท้าย": "Delete last digit",
   "กำลังเข้าสู่ระบบ…": "Signing in…",
   "เข้าสู่ระบบ": "Sign in",
+  "ถัดไป": "Next",
+  "เข้าสู่ระบบในชื่อ": "Signing in as",
+  "เปลี่ยน": "Change",
+  "ใส่ PIN 6 หลัก": "Enter your 6-digit PIN",
+  "ลืม PIN?": "Forgot PIN?",
+  "ให้หัวหน้าหรือ Admin ตั้ง PIN ใหม่ให้ แล้วเข้าระบบด้วย PIN ใหม่": "Ask a supervisor or Admin to set a new PIN, then sign in with it.",
   "ใส่ผิดครบ 5 ครั้ง บัญชีจะถูกล็อก 5 นาที ลืม PIN ให้หัวหน้าหรือ Admin ตั้ง PIN ใหม่ให้":
     "After 5 wrong tries the account locks for 5 minutes. Forgot your PIN? A supervisor or Admin can set a new one.",
 
