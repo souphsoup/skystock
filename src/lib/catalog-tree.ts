@@ -27,8 +27,8 @@ export function flattenTree(categories: CatalogCategory[]): CatalogCategory[] {
   return out;
 }
 
-/** Number of items in a category including all of its descendants. */
-export function itemCount(categories: CatalogCategory[], items: CatalogItem[], id: number): number {
+/** A category's id plus the ids of all of its descendants. */
+export function subtreeIds(categories: CatalogCategory[], id: number): Set<number> {
   const ids = new Set([id]);
   let grew = true;
   while (grew) {
@@ -40,7 +40,18 @@ export function itemCount(categories: CatalogCategory[], items: CatalogItem[], i
       }
     }
   }
-  return items.filter((i) => i.categoryId !== null && ids.has(i.categoryId)).length;
+  return ids;
+}
+
+/** Items in a category including all of its descendants. */
+export function subtreeItems(categories: CatalogCategory[], items: CatalogItem[], id: number): CatalogItem[] {
+  const ids = subtreeIds(categories, id);
+  return items.filter((i) => i.categoryId !== null && ids.has(i.categoryId));
+}
+
+/** Number of items in a category including all of its descendants. */
+export function itemCount(categories: CatalogCategory[], items: CatalogItem[], id: number): number {
+  return subtreeItems(categories, items, id).length;
 }
 
 /** Units offered as chips (the shop's own units are added from existing items). Data, not translated. */

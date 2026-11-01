@@ -29,6 +29,8 @@ export const ACTION_LABEL: Record<string, string> = {
   "movement.void": tk("ยกเลิกรายการ"),
   "item.create": tk("เพิ่มรายการ"),
   "item.update": tk("แก้ไขรายการ"),
+  "item.activate": tk("เปิดใช้รายการ"),
+  "item.deactivate": tk("ปิดใช้รายการ"),
   "category.create": tk("เพิ่มหมวด"),
   "category.rename": tk("เปลี่ยนชื่อหมวด"),
   "category.delete": tk("ลบหมวด"),

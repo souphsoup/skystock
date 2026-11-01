@@ -133,11 +133,14 @@ export async function deleteCategory(user: User, id: number) {
   const db = await getDb();
   await db.tx(async (tx) => {
     const c = await ownCategory(tx, user, id);
-    const [{ n }] = await tx.query<{ n: number }>(
-      `select (select count(*) from categories where parent_id = $1) + (select count(*) from items where category_id = $1) as n`,
+    const [{ items, children }] = await tx.query<{ items: number; children: number }>(
+      `select (select count(*) from items where category_id = $1) as items,
+              (select count(*) from categories where parent_id = $1) as children`,
       [id],
     );
-    if (n > 0) throw new HttpError(409, "ย้ายรายการและชนิดย่อยออกก่อน จึงจะลบหมวดนี้ได้");
+    if (items > 0)
+      throw new HttpError(409, "ยังมีรายการอยู่ในหมวดนี้ ถ้าไม่ใช้แล้วให้กด ‘ปิดใช้งานทั้งหมวด’ แทน รายการจะหายจากใบนับ แต่ประวัติยังอยู่");
+    if (children > 0) throw new HttpError(409, "ลบชนิดหรือส่วนย่อยข้างในก่อน จึงจะลบหมวดนี้ได้");
     await tx.query(`delete from categories where id = $1`, [id]);
     await audit(tx, user.id, "category.delete", "category", id, { name: c.name }, null);
   });
@@ -232,6 +235,26 @@ export async function updateItemTx(tx: Db, user: User, id: number, input: ItemIn
   const { outlet_id: _, ...prev } = before;
   void _;
   await audit(tx, user.id, "item.update", "item", id, prev, it);
+}
+
+/** เปิด/ปิดหลายรายการพร้อมกัน (เลือกหลายรายการ หรือทั้งหมวด) ประวัติการนับเดิมไม่หาย */
+export async function setItemsActive(user: User, rawIds: unknown, active: boolean): Promise<number> {
+  const ids = Array.isArray(rawIds) ? [...new Set(rawIds.map(Number).filter(Number.isInteger))] : [];
+  if (ids.length === 0) throw new HttpError(400, "กรุณาเลือกรายการ");
+  if (ids.length > 2000) throw new HttpError(400, "เลือกได้ครั้งละไม่เกิน 2,000 รายการ");
+  const db = await getDb();
+  return db.tx(async (tx) => {
+    const changed = await tx.query<{ id: number }>(
+      `update items set active = $3
+       where outlet_id = $1 and id in (select jsonb_array_elements_text($2::jsonb)::int) and active <> $3
+       returning id`,
+      [user.outletId, JSON.stringify(ids), active],
+    );
+    for (const { id } of changed) {
+      await audit(tx, user.id, active ? "item.activate" : "item.deactivate", "item", id, { active: !active }, { active });
+    }
+    return changed.length;
+  });
 }
 
 // ---------------------------------------------------------------- users

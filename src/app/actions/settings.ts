@@ -33,6 +33,9 @@ export async function renameCategoryAction(id: number, name: string) {
 export async function deleteCategoryAction(id: number) {
   return run(can.settings, (u) => settings.deleteCategory(u, id));
 }
+export async function setItemsActiveAction(ids: number[], active: boolean) {
+  return run(can.settings, (u) => settings.setItemsActive(u, ids, active));
+}
 export async function saveItemAction(id: number | null, input: settings.ItemInput) {
   return run(can.settings, (u) => (id ? settings.updateItem(u, id, input) : settings.createItem(u, input)));
 }
