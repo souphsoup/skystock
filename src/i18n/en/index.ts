@@ -8,6 +8,7 @@ import proposals from "./proposals";
 import history from "./history";
 import usage from "./usage";
 import signup from "./signup";
+import executive from "./console";
 import comments from "./comments";
 
 export const en: Record<string, string> = {
@@ -20,5 +21,6 @@ export const en: Record<string, string> = {
   ...history,
   ...usage,
   ...signup,
+  ...executive,
   ...comments,
 };

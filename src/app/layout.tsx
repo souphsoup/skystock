@@ -19,6 +19,8 @@ const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
+  // Numbers only: fetched when a page shows them, so it doesn't compete with the Thai text font on 4G.
+  preload: false,
 });
 
 export const metadata: Metadata = {

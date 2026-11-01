@@ -29,6 +29,21 @@ export function periodRange(period: Period, today = businessDate()): { from: str
   return { from: `${today.slice(0, 8)}01`, to: today };
 }
 
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_RANGE_DAYS = 92;
+
+/** ?from=&to= from the console (validated, at most 92 days), else the dashboard's ?period=. */
+export function reportRange(q: { period?: unknown; from?: unknown; to?: unknown }): { from: string; to: string } {
+  const { from, to } = q;
+  if (typeof from === "string" && typeof to === "string" && ISO_DAY.test(from) && ISO_DAY.test(to) && from <= to) {
+    if (addDays(from, MAX_RANGE_DAYS - 1) >= to && !Number.isNaN(Date.parse(from)) && !Number.isNaN(Date.parse(to))) {
+      return { from, to };
+    }
+  }
+  const p = q.period;
+  return periodRange(p === "day" || p === "month" ? p : "week");
+}
+
 export function daysBetween(from: string, to: string): string[] {
   const out: string[] = [];
   for (let d = from; d <= to; d = addDays(d, 1)) out.push(d);

@@ -24,6 +24,8 @@ export const can = {
   settings: (r: Role) => r === "supervisor" || r === "admin",
   users: (r: Role) => r === "admin",
   usage: (r: Role) => r === "admin",
+  /** the desktop executive console (/admin) */
+  console: (r: Role) => r === "manager" || r === "admin",
 };
 
 export interface SheetLine {

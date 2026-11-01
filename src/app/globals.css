@@ -197,4 +197,8 @@ html[data-install="inapp"] #install-gate [data-for="inapp"] {
   .report thead {
     display: table-header-group;
   }
+  /* Chrome repeats tfoot at every page break; the total belongs only after the last row */
+  .report tfoot {
+    display: table-row-group;
+  }
 }

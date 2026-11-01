@@ -3,8 +3,8 @@ import { handle } from "@/lib/api";
 import { requireApiUser } from "@/lib/session";
 import { detailRows, reportRows } from "@/lib/stock";
 import { listMovements } from "@/lib/movements";
-import { KIND_LABEL, WASTE_REASONS } from "@/lib/movement-types";
-import { businessDate, fmtTime, periodRange, type Period } from "@/lib/dates";
+import { KIND_LABEL, wasteReasonLabel } from "@/lib/movement-types";
+import { businessDate, daysBetween, fmtTime, reportRange } from "@/lib/dates";
 import { can } from "@/lib/types";
 import { tk } from "@/i18n";
 import { getT } from "@/i18n/server";
@@ -21,13 +21,12 @@ export async function GET(req: Request) {
   return handle(async () => {
     const user = await requireApiUser(can.dashboard);
     const { t, lang } = await getT();
-    const p = new URL(req.url).searchParams.get("period");
-    const period: Period = p === "day" || p === "month" ? p : "week";
-    const { from, to } = periodRange(period);
+    const q = new URL(req.url).searchParams;
+    const { from, to } = reportRange({ period: q.get("period"), from: q.get("from"), to: q.get("to") });
     const [summary, detail, moves] = await Promise.all([
       reportRows(user, from, to),
       detailRows(user, from, to),
-      listMovements(user, 45),
+      listMovements(user, Math.max(45, daysBetween(from, businessDate()).length)),
     ]);
 
     const wb = new ExcelJS.Workbook();
@@ -130,7 +129,7 @@ export async function GET(req: Request) {
           item: l.name,
           qty: l.qty,
           unit: l.unit,
-          why: m.supplier ?? (m.reason ? (WASTE_REASONS[m.reason] ? t(WASTE_REASONS[m.reason]) : m.reason) : null),
+          why: m.supplier ?? (m.reason ? (wasteReasonLabel(m.reason) ? t(wasteReasonLabel(m.reason)!) : m.reason) : null),
           note: m.note,
           by: m.createdBy,
           status: m.voidedAt ? t("ยกเลิก: {reason}", { reason: m.voidReason ?? "" }) : "",

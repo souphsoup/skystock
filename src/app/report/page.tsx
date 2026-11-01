@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
 import { overview, reportRows, stockAlerts, type ReportRow } from "@/lib/stock";
 import { listMovements, wasteValue } from "@/lib/movements";
-import { KIND_LABEL, WASTE_REASONS } from "@/lib/movement-types";
-import { businessDate, fmtDateTime, fmtDay, fmtRange, fmtTime, periodRange, type Period } from "@/lib/dates";
+import { KIND_LABEL, wasteReasonLabel } from "@/lib/movement-types";
+import { businessDate, daysBetween, fmtDateTime, fmtDay, fmtRange, fmtTime, reportRange, type Period } from "@/lib/dates";
 import { can } from "@/lib/types";
 import { fmtBaht, fmtQty, fmtSigned } from "@/components/status";
 import { getT } from "@/i18n/server";
@@ -16,7 +16,7 @@ import { PrintButton } from "./print-button";
 const toPeriod = (p: string | string[] | undefined): Period => (p === "day" || p === "month" ? p : "week");
 
 export async function generateMetadata({ searchParams }: PageProps<"/report">): Promise<Metadata> {
-  const { from, to } = periodRange(toPeriod((await searchParams).period));
+  const { from, to } = reportRange(await searchParams);
   // Browsers use the title as the default PDF file name.
   return { title: `meStock_${from}_${to}` };
 }
@@ -24,14 +24,17 @@ export async function generateMetadata({ searchParams }: PageProps<"/report">): 
 export default async function ReportPage({ searchParams }: PageProps<"/report">) {
   const user = await requireUser(can.dashboard);
   const { t, lang } = await getT();
-  const period = toPeriod((await searchParams).period);
-  const { from, to } = periodRange(period);
+  const sp = await searchParams;
+  const period = toPeriod(sp.period);
+  const { from, to } = reportRange(sp);
+  // opened from the console (/admin/stock) → go back there
+  const back = sp.from ? "/admin/stock" : `/dashboard?period=${period}`;
   const [ov, rows, alerts, waste, moves] = await Promise.all([
     overview(user, from, to),
     reportRows(user, from, to),
     stockAlerts(user),
     wasteValue(user, from, to),
-    listMovements(user, 45),
+    listMovements(user, Math.max(45, daysBetween(from, businessDate()).length)),
   ]);
 
   const byLocation = new Map<string, ReportRow[]>();
@@ -46,7 +49,7 @@ export default async function ReportPage({ searchParams }: PageProps<"/report">)
   return (
     <main className="report mx-auto max-w-4xl px-4 py-5 text-sm print:max-w-none print:p-0">
       <div className="mb-4 flex items-center justify-between gap-2 print:hidden">
-        <Link href={`/dashboard?period=${period}`} className="btn min-h-10 px-3 text-sm">
+        <Link href={back} className="btn min-h-10 px-3 text-sm">
           ‹ {t("ภาพรวม")}
         </Link>
         <PrintButton />
@@ -191,7 +194,7 @@ export default async function ReportPage({ searchParams }: PageProps<"/report">)
             <tbody>
               {inPeriod.flatMap((m) => {
                 const why = [
-                  m.supplier ?? (m.reason ? (WASTE_REASONS[m.reason] ? t(WASTE_REASONS[m.reason]) : m.reason) : null),
+                  m.supplier ?? (m.reason ? (wasteReasonLabel(m.reason) ? t(wasteReasonLabel(m.reason)!) : m.reason) : null),
                   m.note,
                   m.voidedAt ? t("ยกเลิก: {reason}", { reason: m.voidReason ?? "" }) : null,
                 ]
