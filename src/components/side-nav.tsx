@@ -15,6 +15,7 @@ import {
   IconTag,
   IconUser,
 } from "./icons";
+import { PhoneViewButton } from "./phone-view";
 
 // Desktop sidebar (lg and up); phones keep the bottom tabs. Same routes, so every
 // existing screen opens inside the console without leaving it.
@@ -85,7 +86,10 @@ export function SideNav({ groups, footer }: { groups: SideGroup[]; footer: React
           </div>
         ))}
       </nav>
-      <div className="border-t border-line p-3">{footer}</div>
+      <div className="border-t border-line p-3">
+        <PhoneViewButton />
+        {footer}
+      </div>
     </aside>
   );
 }
@@ -95,7 +99,7 @@ function SideLabel({ item, active }: { item: SideItem; active: boolean }) {
   const Icon = ICONS[item.icon];
   return (
     <>
-      <Icon width={18} height={18} className={active || pending ? "text-accent" : ""} />
+      <Icon width={18} height={18} className={active || pending ? "text-hl" : ""} />
       <span className="flex-1">{item.label}</span>
       {!!item.badge && (
         <span className="num min-w-5 rounded-full bg-bad px-1.5 text-center text-[11px] leading-5 text-surface">

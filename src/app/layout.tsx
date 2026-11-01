@@ -5,6 +5,8 @@ import { UpdateBanner } from "@/components/update-banner";
 import { InstallGate } from "@/components/install-gate";
 import { INSTALL_GATE_SCRIPT } from "@/components/install-gate-script";
 import { THEME_SCRIPT } from "@/components/theme-script";
+import { PHONE_VIEW_SCRIPT } from "@/components/phone-view-script";
+import { PhoneViewExit } from "@/components/phone-view";
 import { I18nProvider } from "@/i18n/client";
 import { getLang } from "@/i18n/server";
 import "./globals.css";
@@ -25,7 +27,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "meStock · MAI The Sky Bar",
-  description: "นับสต๊อกครัวและบาร์จากมือถือ",
+  description: "ระบบบริหารสินค้าคงคลัง",
   appleWebApp: { capable: true, title: "meStock", statusBarStyle: "default" },
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };
@@ -35,18 +37,19 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3f5f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d141d" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f3ee" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e1522" },
   ],
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const lang = await getLang();
   return (
-    // suppressHydrationWarning: the inline scripts add data-theme / data-install before React hydrates.
+    // suppressHydrationWarning: the inline scripts add data-theme / data-view / data-install before React hydrates.
     <html lang={lang} className={`${plexThai.variable} ${plexMono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: PHONE_VIEW_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: INSTALL_GATE_SCRIPT }} />
       </head>
       <body className="min-h-full">
@@ -54,6 +57,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <InstallGate />
           {children}
           <UpdateBanner />
+          <PhoneViewExit />
         </I18nProvider>
         <RegisterSW />
       </body>
