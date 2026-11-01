@@ -14,9 +14,26 @@ const common: Record<string, string> = {
   "Admin": "Admin",
   // me page
   "ภาษา": "Language",
+  "ธีม": "Theme",
+  "ตามเครื่อง": "System",
+  "สว่าง": "Light",
+  "มืด": "Dark",
   "ชื่อผู้ใช้ {login}": "Username {login}",
   "ประเภทวัตถุดิบ รายการ Par": "Categories, items, Par",
   " · ผู้ใช้และสิทธิ์": " · Users & access",
+  "บัญชีของฉัน": "My account",
+  "แก้ชื่อที่แสดง": "Edit display name",
+  "เปลี่ยน PIN": "Change PIN",
+  "PIN เดิม": "Current PIN",
+  "PIN ใหม่ 6 หลัก": "New 6-digit PIN",
+  "ใส่ PIN ใหม่อีกครั้ง": "New PIN again",
+  "PIN ใหม่ทั้งสองช่องไม่ตรงกัน": "The two new PINs don't match",
+  "ห้ามใช้ PIN ที่เดาง่าย เช่น 123456 หรือ 111111 เปลี่ยนแล้วเครื่องอื่นที่เข้าระบบไว้จะออกจากระบบ":
+    "Avoid easy PINs such as 123456 or 111111. Other signed-in devices will be signed out.",
+  "เปลี่ยน PIN แล้ว เครื่องอื่นออกจากระบบหมดแล้ว": "PIN changed. Other devices have been signed out.",
+  "กรอก PIN เดิม 6 หลัก": "Enter your current 6-digit PIN",
+  "PIN ใหม่ต้องไม่ซ้ำกับ PIN เดิม": "The new PIN must be different from the current one",
+  "PIN เดิมไม่ถูกต้อง": "Current PIN is wrong",
   "เครื่องที่ใช้ร่วมกันจะออกจากระบบเองหลังไม่ใช้งาน {n} นาที ยอดที่ยังไม่ซิงก์จะอยู่ในเครื่องจนกว่าจะส่งสำเร็จ":
     "Shared devices sign out after {n} idle minutes. Unsynced entries stay on this device until they are sent.",
   "ยังมี {n} รายการที่ยังไม่ซิงก์ ต่อสัญญาณแล้วรอให้ซิงก์เสร็จก่อนออกจากระบบ":

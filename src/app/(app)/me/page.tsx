@@ -4,7 +4,9 @@ import { ROLE_LABEL, can } from "@/lib/types";
 import { PageHeader } from "@/components/status";
 import { SyncBadge } from "@/components/sync-badge";
 import { LogoutButton } from "./logout-button";
+import { NameForm, PinForm } from "./profile-form";
 import { LangSwitch } from "@/components/lang-switch";
+import { ThemeSwitch } from "@/components/theme-switch";
 import { getT } from "@/i18n/server";
 
 export default async function MePage() {
@@ -24,6 +26,13 @@ export default async function MePage() {
             {t(ROLE_LABEL[user.role])} · {t("ชื่อผู้ใช้ {login}", { login: user.login })}
           </span>
         </div>
+      </section>
+      <section className="card mb-4 grid gap-3 p-4" aria-labelledby="account-h">
+        <h2 id="account-h" className="font-semibold">
+          {t("บัญชีของฉัน")}
+        </h2>
+        <NameForm name={user.name} />
+        <PinForm />
       </section>
       {can.settings(user.role) && (
         <Link href="/settings" className="card mb-4 flex min-h-14 items-center justify-between px-4">
@@ -66,6 +75,12 @@ export default async function MePage() {
           {t("ภาษา")} / Language
         </h2>
         <LangSwitch />
+      </section>
+      <section className="mb-4" aria-labelledby="theme-h">
+        <h2 id="theme-h" className="mb-2 text-sm text-muted">
+          {t("ธีม")}
+        </h2>
+        <ThemeSwitch />
       </section>
       <p className="mb-4 text-sm text-muted">
         {t(

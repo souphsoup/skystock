@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* โทนเดียวกับเอกสารข้อเสนอ: กรมท่าเข้ม + ทองเหลืองแบบบาร์ สลับ Light/Dark ตามเครื่อง */
+/* โทนเดียวกับเอกสารข้อเสนอ: กรมท่าเข้ม + ทองเหลืองแบบบาร์ สลับ Light/Dark ตามที่เลือกในหน้า "ฉัน" (ค่าเริ่มต้น = ตามเครื่อง) */
 :root {
   --paper: #f3f5f8;
   --surface: #ffffff;
@@ -21,9 +21,9 @@
   color-scheme: light;
 }
 
-/* print/PDF always uses the light palette */
-@media screen and (prefers-color-scheme: dark) {
-  :root {
+/* data-theme is set by THEME_SCRIPT before first paint; print/PDF always uses the light palette */
+@media screen {
+  :root[data-theme="dark"] {
     --paper: #0d141d;
     --surface: #151f2b;
     --ink: #e5eaf0;

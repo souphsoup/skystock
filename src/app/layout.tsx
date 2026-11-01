@@ -4,6 +4,7 @@ import { RegisterSW } from "@/components/register-sw";
 import { UpdateBanner } from "@/components/update-banner";
 import { InstallGate } from "@/components/install-gate";
 import { INSTALL_GATE_SCRIPT } from "@/components/install-gate-script";
+import { THEME_SCRIPT } from "@/components/theme-script";
 import { I18nProvider } from "@/i18n/client";
 import { getLang } from "@/i18n/server";
 import "./globals.css";
@@ -40,9 +41,10 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const lang = await getLang();
   return (
-    // suppressHydrationWarning: the inline script may add data-install before React hydrates.
+    // suppressHydrationWarning: the inline scripts add data-theme / data-install before React hydrates.
     <html lang={lang} className={`${plexThai.variable} ${plexMono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: INSTALL_GATE_SCRIPT }} />
       </head>
       <body className="min-h-full">

@@ -62,7 +62,7 @@ export async function getCatalog(user: User): Promise<Catalog> {
   return { locations, categories, items, units };
 }
 
-const text = (v: unknown, field: string, max = 80): string => {
+export const text = (v: unknown, field: string, max = 80): string => {
   const s = typeof v === "string" ? v.trim().replace(/\s+/g, " ") : "";
   if (!s) throw new HttpError(400, "กรุณากรอก{field}", { field });
   if (s.length > max) throw new HttpError(400, "{field}ยาวเกิน {max} ตัวอักษร", { field, max });

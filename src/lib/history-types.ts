@@ -38,6 +38,7 @@ export const ACTION_LABEL: Record<string, string> = {
   "user.create": tk("เพิ่มผู้ใช้"),
   "user.update": tk("แก้ไขผู้ใช้"),
   "user.reset_pin": tk("ตั้ง PIN ใหม่"),
+  "user.change_pin": tk("เปลี่ยน PIN ของตัวเอง"),
   "user.activate": tk("เปิดใช้ผู้ใช้"),
   "user.deactivate": tk("ปิดใช้ผู้ใช้"),
   "user.revoke_sessions": tk("ออกจากระบบทุกเครื่อง"),
