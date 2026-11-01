@@ -329,4 +329,30 @@ alter table login_events add constraint login_events_reason_check
   check (reason in ('bad_pin','locked','unknown','pending','throttled'));
 `,
   },
+  {
+    id: "011_history_indexes",
+    sql: `
+-- ยอดนับล่าสุดของแต่ละรายการ (ยกมา, แจ้งเตือนต่ำกว่า Par) หาได้จาก index ทีละรายการ
+-- แทนการอ่านประวัติการนับทั้งหมด: เก็บวันที่ของรอบนับไว้ที่บรรทัดด้วย (วันที่ของรอบนับไม่เปลี่ยน)
+alter table count_lines add column business_date date;
+-- เติมเองถ้าโค้ดที่ insert ไม่ได้ใส่มา: แอปรุ่นก่อนหน้ายังทำงานได้ถ้า migration นี้ขึ้นก่อน deploy
+create function count_lines_business_date() returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.business_date is null then
+    select c.business_date into new.business_date from counts c where c.id = new.count_id;
+  end if;
+  return new;
+end $$;
+create trigger count_lines_business_date before insert on count_lines
+  for each row execute function count_lines_business_date();
+update count_lines l set business_date = c.business_date from counts c where c.id = l.count_id;
+alter table count_lines alter column business_date set not null;
+create index count_lines_item_date_idx on count_lines (item_id, business_date desc) where counted is not null;
+-- หน้าการใช้งานแอป และหน้าประวัติการแก้ไข
+create index movement_lines_movement_idx on movement_lines (movement_id);
+create index count_lines_counted_by_idx on count_lines (counted_by, updated_at);
+create index audit_log_user_idx on audit_log (user_id, at);
+create index audit_log_at_idx on audit_log (at desc);
+`,
+  },
 ];

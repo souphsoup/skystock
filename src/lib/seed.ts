@@ -184,9 +184,9 @@ export async function seedDemoData(db: Db) {
           if (it.blind && rand() < 0.25 && counted > 0) counted -= 1;
         }
         await tx.query(
-          `insert into count_lines (count_id, item_id, opening, in_qty, out_qty, counted, status, counted_by)
-           values ($1,$2,$3,$4,$5,$6,'confirmed',$7)`,
-          [c.id, it.id, opening, inQty, outQty, counted, counter],
+          `insert into count_lines (count_id, item_id, business_date, opening, in_qty, out_qty, counted, status, counted_by)
+           values ($1,$2,$8,$3,$4,$5,$6,'confirmed',$7)`,
+          [c.id, it.id, opening, inQty, outQty, counted, counter, date],
         );
         stock.set(it.id, counted);
       }

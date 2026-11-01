@@ -1,7 +1,7 @@
 import "server-only";
 import { getDb, type Db } from "./db";
 import { HttpError, type User } from "./session";
-import { audit, OPENING_SQL } from "./stock";
+import { audit, openingOf } from "./stock";
 import { insertItem, updateItemTx, type ItemInput } from "./settings";
 import { businessDate } from "./dates";
 import { round2 } from "./types";
@@ -180,19 +180,19 @@ export async function approveProposal(
     if (c && p.counted !== null && Number(fields.locationId) === p.location_id) {
       if (c.status === "draft") {
         await tx.query(
-          `insert into count_lines (count_id, item_id, opening, counted, counted_by)
-           select $3, $4, (select o.counted from (${OPENING_SQL}) o where o.item_id = $4), $5, $6
+          `insert into count_lines (count_id, item_id, business_date, opening, counted, counted_by)
+           select $1, $2, $3::date, ${openingOf("$2", "$3::date")}, $4, $5
            on conflict (count_id, item_id) do update set counted = excluded.counted, counted_by = excluded.counted_by
              where count_lines.counted is null`,
-          [fields.locationId, p.business_date, c.id, itemId, p.counted, p.created_by],
+          [c.id, itemId, p.business_date, p.counted, p.created_by],
         );
         counted = "draft";
       } else if (c.status === "submitted" || c.status === "recount") {
         await tx.query(
-          `insert into count_lines (count_id, item_id, opening, counted, counted_by)
-           select $3, $4, (select o.counted from (${OPENING_SQL}) o where o.item_id = $4), $5, $6
+          `insert into count_lines (count_id, item_id, business_date, opening, counted, counted_by)
+           select $1, $2, $3::date, ${openingOf("$2", "$3::date")}, $4, $5
            on conflict (count_id, item_id) do nothing`,
-          [fields.locationId, p.business_date, c.id, itemId, p.counted, p.created_by],
+          [c.id, itemId, p.business_date, p.counted, p.created_by],
         );
         await tx.query(
           `update count_lines set status = case when expected is null or counted = expected then 'ok' else 'flag' end

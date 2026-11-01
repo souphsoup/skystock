@@ -76,13 +76,13 @@ async function getCount(db: Db, user: User, countId: number): Promise<CountRow> 
   return c;
 }
 
-// Latest counted quantity per item from earlier, non-draft counts = ยกมา ($1 location, $2 business date)
-export const OPENING_SQL = `
-  select distinct on (l.item_id) l.item_id, l.counted
-  from count_lines l join counts c on c.id = l.count_id
-  join items i on i.id = l.item_id
-  where i.location_id = $1 and c.business_date < $2 and c.status <> 'draft' and l.counted is not null
-  order by l.item_id, c.business_date desc`;
+/** ยกมา: latest counted quantity of `item` from an earlier, non-draft count before `date` (SQL
+ * expressions). Walks count_lines_item_date_idx from the newest line down, so it reads one or two
+ * rows however long the history gets. */
+export const openingOf = (item: string, date: string) => `(
+  select l.counted from count_lines l join counts c on c.id = l.count_id
+  where l.item_id = ${item} and l.business_date < ${date} and l.counted is not null and c.status <> 'draft'
+  order by l.business_date desc limit 1)`;
 
 /** Movements recorded while no draft was open (or after the item was already
  * counted) feed the next count: attach them to this draft's uncounted lines. */
@@ -122,6 +122,14 @@ export async function getSheet(user: User, locationId: number): Promise<Sheet> {
   );
   if (!loc || loc.outlet_id !== user.outletId) throw new HttpError(404, "ไม่พบจุดเก็บนี้");
 
+  // Once submitted the sheet no longer follows the item list, so a plain read will do
+  // (the count screen asks again every minute).
+  const [existing] = await db.query<{ id: number; status: CountStatus }>(
+    `select id, status from counts where location_id = $1 and business_date = $2`,
+    [locationId, date],
+  );
+  if (existing && existing.status !== "draft") return loadSheet(db, user, existing.id);
+
   const countId = await db.tx(async (tx) => {
     await tx.query(
       `insert into counts (location_id, business_date) values ($1,$2) on conflict (location_id, business_date) do nothing`,
@@ -133,8 +141,8 @@ export async function getSheet(user: User, locationId: number): Promise<Sheet> {
     );
     if (c.status === "draft") {
       await tx.query(
-        `insert into count_lines (count_id, item_id, opening)
-         select $3, i.id, o.counted from items i left join (${OPENING_SQL}) o on o.item_id = i.id
+        `insert into count_lines (count_id, item_id, business_date, opening)
+         select $3, i.id, $2::date, ${openingOf("i.id", "$2::date")} from items i
          where i.location_id = $1 and i.active
          on conflict do nothing`,
         [locationId, date, c.id],
@@ -147,9 +155,12 @@ export async function getSheet(user: User, locationId: number): Promise<Sheet> {
       );
       // Yesterday's count may have been approved/adjusted since this draft was opened.
       await tx.query(
-        `update count_lines l set opening = o.counted from (${OPENING_SQL}) o
-         where l.count_id = $3 and l.item_id = o.item_id and l.opening is distinct from o.counted`,
-        [locationId, date, c.id],
+        `update count_lines l set opening = o.counted
+         from (select cur.item_id, ${openingOf("cur.item_id", "$2::date")} as counted
+               from count_lines cur where cur.count_id = $1) o
+         where l.count_id = $1 and l.item_id = o.item_id and o.counted is not null
+           and l.opening is distinct from o.counted`,
+        [c.id, date],
       );
       await attachPendingMoves(tx, c.id, locationId);
     }
@@ -230,33 +241,51 @@ export async function saveLines(
 ): Promise<{ sheet: Sheet; rejected: number[] }> {
   const db = await getDb();
   const rejected: number[] = [];
+  // The same item twice in one batch: the later edit wins, as it would when applied in order.
+  const edits = [
+    ...new Map(
+      inputs.map((input) => {
+        const e = {
+          itemId: Number(input.itemId),
+          inQty: cleanQty(input.inQty, tk("รับเข้า")),
+          outQty: cleanQty(input.outQty, tk("เบิกออก")),
+          counted: input.counted === null ? null : cleanQty(input.counted, tk("คงเหลือ")),
+        };
+        return [e.itemId, e] as const;
+      }),
+    ).values(),
+  ];
   await db.tx(async (tx) => {
     const c = await getCount(tx, user, countId);
-    for (const input of inputs) {
-      const itemId = Number(input.itemId);
-      const inQty = cleanQty(input.inQty, tk("รับเข้า"));
-      const outQty = cleanQty(input.outQty, tk("เบิกออก"));
-      const counted = input.counted === null ? null : cleanQty(input.counted, tk("คงเหลือ"));
-      const [line] = await tx.query<{ status: LineStatus; in_qty: number; out_qty: number; counted: number | null }>(
-        `select status, in_qty, out_qty, counted from count_lines where count_id = $1 and item_id = $2 for update`,
-        [countId, itemId],
-      );
+    // One read and one write for the whole batch: a full sheet is 100+ lines.
+    const current = await tx.query<{ item_id: number; status: LineStatus; in_qty: number; out_qty: number; counted: number | null }>(
+      `select item_id, status, in_qty, out_qty, counted from count_lines
+       where count_id = $1 and item_id = any($2::int[]) for update`,
+      [countId, `{${edits.map((e) => e.itemId).filter(Number.isSafeInteger).join(",")}}`],
+    );
+    const byItem = new Map(current.map((l) => [l.item_id, l]));
+    const changed: typeof edits = [];
+    for (const e of edits) {
+      const line = byItem.get(e.itemId);
       const editable = line && (c.status === "draft" || (c.status === "recount" && line.status === "recount"));
       if (!editable) {
-        rejected.push(itemId);
+        rejected.push(e.itemId);
         continue;
       }
-      if (line.in_qty === inQty && line.out_qty === outQty && line.counted === counted) continue;
-      await tx.query(
-        `update count_lines set in_qty = $3, out_qty = $4, counted = $5, counted_by = $6, updated_at = now()
-         where count_id = $1 and item_id = $2`,
-        [countId, itemId, inQty, outQty, counted, user.id],
-      );
+      if (line.in_qty === e.inQty && line.out_qty === e.outQty && line.counted === e.counted) continue;
+      changed.push(e);
       if (c.status === "recount") {
-        await audit(tx, user.id, "line.recount_edit", "count_line", `${countId}:${itemId}`,
-          { in: line.in_qty, out: line.out_qty, counted: line.counted }, { in: inQty, out: outQty, counted });
+        await audit(tx, user.id, "line.recount_edit", "count_line", `${countId}:${e.itemId}`,
+          { in: line.in_qty, out: line.out_qty, counted: line.counted }, { in: e.inQty, out: e.outQty, counted: e.counted });
       }
     }
+    if (!changed.length) return;
+    await tx.query(
+      `update count_lines l set in_qty = x."inQty", out_qty = x."outQty", counted = x.counted, counted_by = $2, updated_at = now()
+       from jsonb_to_recordset($3::jsonb) as x("itemId" int, "inQty" numeric, "outQty" numeric, counted numeric)
+       where l.count_id = $1 and l.item_id = x."itemId"`,
+      [countId, user.id, JSON.stringify(changed)],
+    );
   });
   return { sheet: await loadSheet(db, user, countId), rejected };
 }
@@ -597,11 +626,21 @@ export async function todayTasks(user: User, date = businessDate()): Promise<Loc
       status: r.status,
       counted: r.counted ?? 0,
       recount: r.recount ?? 0,
+      comments: r.comments ?? 0,
     }));
 }
 
-/** รายการที่หมดหรือต่ำกว่า Par จากยอดนับล่าสุดของแต่ละรายการ */
+/**
+ * รายการที่หมดหรือต่ำกว่า Par จากยอดนับล่าสุดของแต่ละรายการ
+ * Blind items are left out for people who count but don't review: the last count is
+ * the next round's opening, so showing it (or even "out") would give away the figure.
+ */
 export async function stockAlerts(user: User): Promise<StockAlert[]> {
+  return outletAlerts(user.outletId, can.count(user.role) && !can.review(user.role));
+}
+
+// The layout (menu badge) and the page under it both ask: one query per request.
+const outletAlerts = cache(async (outletId: number, hideBlind: boolean): Promise<StockAlert[]> => {
   const db = await getDb();
   const rows = await db.query<{
     id: number;
@@ -612,15 +651,17 @@ export async function stockAlerts(user: User): Promise<StockAlert[]> {
     counted: number;
     location_name: string;
   }>(
-    `select * from (
-       select distinct on (i.id) i.id, i.name_th, i.name_en, i.unit, i.par, l.counted, loc.name as location_name, i.sort_order
-       from items i join locations loc on loc.id = i.location_id
-       join count_lines l on l.item_id = i.id join counts c on c.id = l.count_id
-       where i.active and loc.outlet_id = $1 and l.counted is not null
-       order by i.id, c.business_date desc
-     ) latest where counted <= 0 or counted < par
-     order by counted > 0, sort_order`,
-    [user.outletId],
+    `select i.id, i.name_th, i.name_en, i.unit, i.par, last.counted, loc.name as location_name
+     from items i join locations loc on loc.id = i.location_id
+     cross join lateral (
+       select l.counted from count_lines l
+       where l.item_id = i.id and l.counted is not null
+       order by l.business_date desc limit 1
+     ) last
+     where i.active and loc.outlet_id = $1 and not ($2::boolean and i.blind)
+       and (last.counted <= 0 or last.counted < i.par)
+     order by last.counted > 0, i.sort_order`,
+    [outletId, hideBlind],
   );
   return rows.map((r) => ({
     itemId: r.id,
@@ -631,7 +672,7 @@ export async function stockAlerts(user: User): Promise<StockAlert[]> {
     level: r.counted <= 0 ? "out" : "low",
     locationName: r.location_name,
   }));
-}
+});
 
 // ---------------------------------------------------------------- dashboard + reports
 
