@@ -2,12 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { reviewQueue, stockAlerts, todayTasks } from "@/lib/stock";
+import { countSignups } from "@/lib/signup";
 import { businessDate, fmtWeekday } from "@/lib/dates";
 import { can } from "@/lib/types";
 import { fmtQty } from "@/components/status";
 import { TaskList } from "@/components/task-list";
 import { SyncBadge } from "@/components/sync-badge";
-import { IconAlert, IconBox, IconSwap, IconTrash, IconTruck } from "@/components/icons";
+import { IconAlert, IconBox, IconSwap, IconTrash, IconTruck, IconUser } from "@/components/icons";
 import { getT } from "@/i18n/server";
 
 export default async function HomePage() {
@@ -15,10 +16,11 @@ export default async function HomePage() {
   if (!can.count(user.role)) redirect("/dashboard");
   const { t, lang } = await getT();
 
-  const [tasks, alerts, queue] = await Promise.all([
+  const [tasks, alerts, queue, signups] = await Promise.all([
     todayTasks(user),
     stockAlerts(user),
     can.review(user.role) ? reviewQueue(user) : Promise.resolve(null),
+    can.users(user.role) ? countSignups(user) : Promise.resolve(0),
   ]);
   const open = tasks.filter((task) => task.status === null || task.status === "draft" || task.status === "recount");
   const next = open.find((task) => task.status === "recount") ?? open[0];
@@ -33,6 +35,19 @@ export default async function HomePage() {
         </div>
         <SyncBadge />
       </header>
+
+      {signups > 0 && (
+        <Link
+          href="/settings/users"
+          className="mb-3 flex items-center gap-3 rounded-2xl border border-accent bg-accent-soft p-4"
+        >
+          <IconUser className="text-accent" />
+          <span className="flex-1 font-semibold">{t("มีคนสมัครใช้งาน รออนุมัติ {n} คน", { n: signups })}</span>
+          <span className="text-muted" aria-hidden>
+            ›
+          </span>
+        </Link>
+      )}
 
       {recountTasks.map((task) => (
         <Link

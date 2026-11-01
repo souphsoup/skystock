@@ -207,7 +207,7 @@ export async function listHistory(
 export async function historyUsers(user: User) {
   const db = await getDb();
   return db.query<{ id: number; name: string }>(
-    `select id, name from users where outlet_id = $1 order by active desc, name`,
+    `select id, name from users where outlet_id = $1 and approval is null order by active desc, name`,
     [user.outletId],
   );
 }

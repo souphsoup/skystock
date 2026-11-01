@@ -42,7 +42,7 @@ function useAction() {
 
 const pinOk = (p: string) => /^\d{6}$/.test(p);
 
-function RolePicker({ value, onChange }: { value: Role; onChange: (r: Role) => void }) {
+export function RolePicker({ value, onChange }: { value: Role; onChange: (r: Role) => void }) {
   const { t } = useT();
   return (
     <div className="grid gap-2" role="radiogroup" aria-label={t("บทบาท")}>

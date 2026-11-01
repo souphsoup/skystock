@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/session";
 import { LoginForm } from "./login-form";
@@ -18,6 +19,9 @@ export default async function LoginPage() {
         <p className="mt-1 text-muted">{t("นับสต๊อกครัวและบาร์")}</p>
       </div>
       <LoginForm />
+      <Link href="/signup" className="btn btn-ghost text-sm text-muted">
+        {t("พนักงานใหม่? สมัครใช้งาน")}
+      </Link>
     </main>
   );
 }

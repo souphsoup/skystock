@@ -285,4 +285,15 @@ create index login_events_user_idx on login_events (user_id, at desc);
 alter table login_events enable row level security;
 `,
   },
+  {
+    id: "008_signup",
+    sql: `
+-- สมัครใช้งานเองจากหน้า /signup: บัญชีเริ่มที่ approval = 'pending' + active = false จนกว่า Admin จะอนุมัติ
+-- null = บัญชีปกติ (Admin สร้างเอง หรืออนุมัติแล้ว), 'rejected' = Admin ปฏิเสธ (สมัครชื่อเดิมใหม่ได้)
+alter table users add column approval text check (approval in ('pending','rejected'));
+create index users_pending_idx on users (outlet_id) where approval = 'pending';
+alter table login_events drop constraint if exists login_events_reason_check;
+alter table login_events add constraint login_events_reason_check check (reason in ('bad_pin','locked','unknown','pending'));
+`,
+  },
 ];

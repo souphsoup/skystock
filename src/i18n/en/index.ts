@@ -7,6 +7,7 @@ import settings from "./settings";
 import proposals from "./proposals";
 import history from "./history";
 import usage from "./usage";
+import signup from "./signup";
 
 export const en: Record<string, string> = {
   ...common,
@@ -17,4 +18,5 @@ export const en: Record<string, string> = {
   ...proposals,
   ...history,
   ...usage,
+  ...signup,
 };

@@ -251,13 +251,13 @@ export async function listUsers(user: User): Promise<UserRow[]> {
   const db = await getDb();
   return db.query<UserRow>(
     `select id, login, name, role, active, coalesce(locked_until > now(), false) as locked
-     from users where outlet_id = $1
+     from users where outlet_id = $1 and approval is null
      order by active desc, array_position(array['admin','manager','supervisor','operation'], role), name`,
     [user.outletId],
   );
 }
 
-function cleanPin(pin: unknown): string {
+export function cleanPin(pin: unknown): string {
   if (typeof pin !== "string" || !/^\d{6}$/.test(pin)) throw new HttpError(400, "PIN ต้องเป็นตัวเลข 6 หลัก");
   if (/^(\d)\1{5}$/.test(pin) || pin === "123456" || pin === "654321") {
     throw new HttpError(400, "PIN นี้เดาง่ายเกินไป เลือกตัวเลขอื่น");
@@ -289,7 +289,7 @@ export async function createUser(
 
 async function ownUser(db: Db, admin: User, id: number) {
   const [u] = await db.query<{ id: number; outlet_id: number; login: string; role: Role; active: boolean; name: string }>(
-    `select id, outlet_id, login, role, active, name from users where id = $1 for update`,
+    `select id, outlet_id, login, role, active, name from users where id = $1 and approval is null for update`,
     [id],
   );
   if (!u || u.outlet_id !== admin.outletId) throw new HttpError(404, "ไม่พบผู้ใช้นี้");

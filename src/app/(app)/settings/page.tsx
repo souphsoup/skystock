@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { getCatalog } from "@/lib/settings";
+import { countSignups } from "@/lib/signup";
 import { can, ROLE_LABEL } from "@/lib/types";
 import { PageHeader } from "@/components/status";
 import { IconBell, IconChart, IconUser } from "@/components/icons";
@@ -9,7 +10,10 @@ import { getT } from "@/i18n/server";
 
 export default async function SettingsPage() {
   const user = await requireUser(can.settings);
-  const catalog = await getCatalog(user);
+  const [catalog, signups] = await Promise.all([
+    getCatalog(user),
+    can.users(user.role) ? countSignups(user) : Promise.resolve(0),
+  ]);
   const { t } = await getT();
   return (
     <main className="mx-auto max-w-xl px-4 pt-5">
@@ -19,6 +23,7 @@ export default async function SettingsPage() {
           <Link href="/settings/users" className="flex min-h-14 items-center gap-3 px-4">
             <IconUser className="text-accent" />
             <span className="flex-1 font-semibold">{t("ผู้ใช้และสิทธิ์")}</span>
+            {signups > 0 && <span className="pill bg-accent text-white">{t("รออนุมัติ {n}", { n: signups })}</span>}
             <span className="text-muted" aria-hidden>
               ›
             </span>
