@@ -59,7 +59,7 @@ export default async function ReportPage({ searchParams }: PageProps<"/report">)
         <div>
           <p className="text-muted">meStock · MAI The Sky Bar</p>
           <h1 className="text-xl font-bold">
-            {t("รายงานสต๊อก")} · {fmtRange(from, to, lang)}
+            {t("รายงานสต็อก")} · {fmtRange(from, to, lang)}
           </h1>
         </div>
         <p className="text-xs text-muted">
@@ -84,7 +84,7 @@ export default async function ReportPage({ searchParams }: PageProps<"/report">)
           <ul className="list-disc pl-5">
             {ov.pendingReview > 0 && <li>{t("รอหัวหน้าอนุมัติ {n} รอบนับ", { n: ov.pendingReview })}</li>}
             {ov.outOfStock.map((o) => (
-              <li key={o.name}>{t("{name} หมดสต๊อก {days} วัน", { name: o.name, days: o.days })}</li>
+              <li key={o.name}>{t("{name} หมดสต็อก {days} วัน", { name: o.name, days: o.days })}</li>
             ))}
             {ov.variances.map((v, i) => (
               <li key={i}>

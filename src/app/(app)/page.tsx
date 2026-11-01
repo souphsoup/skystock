@@ -39,9 +39,9 @@ export default async function HomePage() {
       {signups > 0 && (
         <Link
           href="/settings/users"
-          className="mb-3 flex items-center gap-3 rounded-2xl border border-accent bg-accent-soft p-4"
+          className="mb-3 flex items-center gap-3 rounded-2xl border border-accent-line bg-accent-soft p-4"
         >
-          <IconUser className="text-accent" />
+          <IconUser className="text-hl" />
           <span className="flex-1 font-semibold">{t("มีคนสมัครใช้งาน รออนุมัติ {n} คน", { n: signups })}</span>
           <span className="text-muted" aria-hidden>
             ›
@@ -64,7 +64,7 @@ export default async function HomePage() {
 
       {next ? (
         <section className="card mb-5 p-5" aria-labelledby="next-task">
-          <p className="text-sm font-semibold text-accent">{t("งานถัดไป · ก่อน {time}", { time: next.dueTime })}</p>
+          <p className="text-sm font-semibold text-hl">{t("งานถัดไป · ก่อน {time}", { time: next.dueTime })}</p>
           <h2 id="next-task" className="mt-1 text-xl font-bold">
             {next.status === "recount"
               ? t("นับซ้ำ {location}", { location: next.locationName })
@@ -115,11 +115,11 @@ export default async function HomePage() {
                   ? "/settings"
                   : "/"
           }
-          className="card flex min-h-28 flex-col justify-between border-accent/40 p-4"
+          className="card flex min-h-28 flex-col justify-between border-accent-line p-4"
         >
-          <IconBox className="text-accent" width={28} height={28} />
+          <IconBox className="text-hl" width={28} height={28} />
           <span>
-            <b className="block">{t("นับสต๊อก")}</b>
+            <b className="block">{t("นับสต็อก")}</b>
             <span className="text-sm text-muted">{tasks.map((task) => task.locationName).join(" · ")}</span>
           </span>
         </Link>
@@ -171,7 +171,7 @@ export default async function HomePage() {
                 .join(" · ")}
             </span>
           </span>
-          <span className="num text-2xl font-bold text-accent">{queue.pending.length}</span>
+          <span className="num text-2xl font-bold text-hl">{queue.pending.length}</span>
         </Link>
       )}
 

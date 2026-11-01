@@ -1,4 +1,4 @@
-// Morning summary ("สรุปสต๊อกตอนเช้า") as plain data, plus renderers for LINE Flex
+// Morning summary ("สรุปสต็อกตอนเช้า") as plain data, plus renderers for LINE Flex
 // and email. No server-only imports: the settings page renders the same Digest as a preview.
 // Every text is already in the Digest's language; the renderers translate their own fixed texts.
 
@@ -24,12 +24,14 @@ export interface Digest {
   altText: string;
 }
 
-// Same palette as the app (light theme) and the proposal.
-const HEX: Record<Tone, string> = { ok: "#2e7a57", warn: "#a86b12", bad: "#b0402f", muted: "#5b6776" };
-const INK = "#15212f";
-const NAVY = "#15212f";
-const BRASS = "#a8731f";
-const LINE_COLOR = "#d9dfe6";
+// Same palette as the app (light theme): Meliá navy + sand, teak for section titles.
+const HEX: Record<Tone, string> = { ok: "#2e7a57", warn: "#a86b12", bad: "#b0402f", muted: "#635d55" };
+const INK = "#1d2b45";
+const NAVY = "#1d2b45";
+const TEAK = "#8a5a3b";
+const SAND = "#d9c4a1";
+const PAPER = "#f6f3ee";
+const LINE_COLOR = "#e3dcd0";
 
 // ---------------------------------------------------------------- LINE Flex Message
 
@@ -76,7 +78,7 @@ export function toFlex(d: Digest): Flex {
   ];
   for (const sec of d.sections) {
     body.push({ type: "separator", margin: "lg", color: LINE_COLOR });
-    body.push(text(sec.title, { size: "sm", weight: "bold", color: BRASS, margin: "lg" }));
+    body.push(text(sec.title, { size: "sm", weight: "bold", color: TEAK, margin: "lg" }));
     body.push({ type: "box", layout: "vertical", margin: "sm", spacing: "sm", contents: sec.rows.map(row) });
     if (sec.more > 0) body.push(text(t("และอีก {n} รายการ", { n: sec.more }), { size: "xs", color: HEX.muted, margin: "sm" }));
   }
@@ -91,7 +93,7 @@ export function toFlex(d: Digest): Flex {
       paddingAll: "lg",
       contents: [
         text(d.title, { size: "lg", weight: "bold", color: "#ffffff" }),
-        text(d.subtitle, { size: "xs", color: "#c9b48a" }),
+        text(d.subtitle, { size: "xs", color: SAND }),
       ],
     },
     body: { type: "box", layout: "vertical", contents: body },
@@ -104,7 +106,7 @@ export function toFlex(d: Digest): Flex {
         {
           type: "button",
           style: "primary",
-          color: BRASS,
+          color: NAVY,
           height: "sm",
           action: { type: "uri", label: t("เปิด Dashboard"), uri: d.url },
         },
@@ -125,7 +127,7 @@ export function toEmail(d: Digest): { subject: string; html: string; text: strin
   const sections = d.sections
     .map(
       (sec) => `
-      <h3 style="margin:24px 0 6px;font-size:15px;color:${BRASS}">${esc(sec.title)}</h3>
+      <h3 style="margin:24px 0 6px;font-size:15px;color:${TEAK}">${esc(sec.title)}</h3>
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:14px">
         ${sec.rows
           .map(
@@ -138,12 +140,12 @@ export function toEmail(d: Digest): { subject: string; html: string; text: strin
     )
     .join("");
 
-  const html = `<!doctype html><html lang="${d.lang}"><body style="margin:0;background:#f3f5f8;font-family:'IBM Plex Sans Thai','Noto Sans Thai',Tahoma,sans-serif;color:${INK}">
+  const html = `<!doctype html><html lang="${d.lang}"><body style="margin:0;background:${PAPER};font-family:'IBM Plex Sans Thai','Noto Sans Thai',Tahoma,sans-serif;color:${INK}">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:24px 12px">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#fffdf9;border-radius:12px;overflow:hidden">
     <tr><td style="background:${NAVY};padding:20px 24px">
       <div style="font-size:20px;font-weight:700;color:#ffffff">${esc(d.title)}</div>
-      <div style="font-size:13px;color:#c9b48a">${esc(d.subtitle)}</div>
+      <div style="font-size:13px;color:${SAND}">${esc(d.subtitle)}</div>
     </td></tr>
     <tr><td style="padding:20px 24px">
       ${d.status.map((s) => `<div style="font-size:16px;font-weight:700;color:${HEX[s.tone]};margin-bottom:4px">${esc(s.text)}</div>`).join("")}
@@ -158,7 +160,7 @@ export function toEmail(d: Digest): { subject: string; html: string; text: strin
       ${sections}
       ${
         d.url
-          ? `<p style="margin:28px 0 4px"><a href="${esc(d.url)}" style="display:inline-block;background:${BRASS};color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px">${esc(t("เปิด Dashboard"))}</a></p>`
+          ? `<p style="margin:28px 0 4px"><a href="${esc(d.url)}" style="display:inline-block;background:${NAVY};color:#faf8f4;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px">${esc(t("เปิด Dashboard"))}</a></p>`
           : ""
       }
     </td></tr>

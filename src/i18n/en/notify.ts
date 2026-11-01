@@ -1,8 +1,8 @@
 // Morning stock summary (LINE OA / email), its settings page and the LINE webhook.
 const notify: Record<string, string> = {
   // digest (src/lib/notify.ts, src/lib/digest.ts, src/components/digest-preview.tsx)
-  "สรุปสต๊อกเมื่อวาน": "Yesterday's stock summary",
-  "สรุปสต๊อก {day}": "Stock summary {day}",
+  "สรุปสต็อกเมื่อวาน": "Yesterday's stock summary",
+  "สรุปสต็อก {day}": "Stock summary {day}",
   "ยังไม่ส่งยอด: {names}": "Not submitted: {names}",
   "รอหัวหน้าอนุมัติ: {names}": "Waiting for supervisor approval: {names}",
   "ยังไม่มีจุดนับที่มีรายการ": "No locations with items yet",
@@ -24,7 +24,7 @@ const notify: Record<string, string> = {
   "ตัวอย่างสรุปตอนเช้า": "Morning summary preview",
 
   // LINE webhook reply (Thai and English are both sent)
-  "เชื่อมแชตนี้กับ meStock แล้ว\nรอ Admin เปิดรับ \"สรุปสต๊อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า":
+  "เชื่อมแชตนี้กับ meStock แล้ว\nรอ Admin เปิดรับ \"สรุปสต็อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า":
     "This chat is now linked to meStock.\nWaiting for Admin to switch on the \"morning stock summary\" in Settings › Morning summary.",
 
   // run statuses (src/lib/notify-labels.ts)

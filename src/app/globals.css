@@ -1,15 +1,28 @@
 @import "tailwindcss";
 
-/* โทนเดียวกับเอกสารข้อเสนอ: กรมท่าเข้ม + ทองเหลืองแบบบาร์ สลับ Light/Dark ตามที่เลือกในหน้า "ฉัน" (ค่าเริ่มต้น = ตามเครื่อง) */
+/* มุมมองมือถือบนคอม (ปุ่มในแถบข้าง): <html data-view="phone"> ปิด layout sm/md/lg/xl ทั้งหมด
+   หน้าจึงจัดแบบเดียวกับบนมือถือ แล้วบีบให้กว้างเท่ามือถือไว้กลางจอ (ดู phone-view-script.ts) */
+@custom-variant sm { @media (width >= 40rem) { html:not([data-view="phone"]) & { @slot; } } }
+@custom-variant md { @media (width >= 48rem) { html:not([data-view="phone"]) & { @slot; } } }
+@custom-variant lg { @media (width >= 64rem) { html:not([data-view="phone"]) & { @slot; } } }
+@custom-variant xl { @media (width >= 80rem) { html:not([data-view="phone"]) & { @slot; } } }
+@custom-variant 2xl { @media (width >= 96rem) { html:not([data-view="phone"]) & { @slot; } } }
+@custom-variant phone-view { @media screen and (width >= 64rem) { html[data-view="phone"] & { @slot; } } }
+
+/* ธีมลูกค้า Meliá Chiang Mai / MAI The Sky Bar (แบบ A "ทรายคลาสสิก"): กรมท่าอ่าว + ทราย + ไม้สัก บนพื้นสีอุ่น
+   --accent = ปุ่มหลัก/ของที่เลือก, --hl = ตัวหนังสือ/ไอคอนไฮไลต์, --accent-line = ขอบการ์ดที่เลือก
+   สีเป็นการตีความโทน Meliá ยังไม่ใช่รหัสสีทางการ · สลับ Light/Dark ตามที่เลือกในหน้า "ฉัน" (ค่าเริ่มต้น = ตามเครื่อง) */
 :root {
-  --paper: #f3f5f8;
-  --surface: #ffffff;
-  --ink: #15212f;
-  --muted: #5b6776;
-  --line: #d9dfe6;
-  --accent: #a8731f;
-  --accent-ink: #ffffff;
-  --accent-soft: #f4ead8;
+  --paper: #f6f3ee;
+  --surface: #fffdf9;
+  --ink: #1d2b45;
+  --muted: #635d55;
+  --line: #e3dcd0;
+  --accent: #1d2b45;
+  --accent-ink: #faf8f4;
+  --accent-soft: #f1e8d8;
+  --accent-line: #d9c4a1;
+  --hl: #8a5a3b;
   --sky: #2b4c70;
   --sky-soft: #e3ebf4;
   --ok: #2e7a57;
@@ -21,17 +34,26 @@
   color-scheme: light;
 }
 
+/* โทนทอง (แบบ A1, เลือกในหน้า "ฉัน"): ทองเหลืองของแอปเดิมแทนทราย/ไม้สัก โครงอื่นเหมือนแบบ A */
+:root[data-tone="gold"] {
+  --accent-soft: #f4ead8;
+  --accent-line: #e3c48f;
+  --hl: #a8731f;
+}
+
 /* data-theme is set by THEME_SCRIPT before first paint; print/PDF always uses the light palette */
 @media screen {
   :root[data-theme="dark"] {
-    --paper: #0d141d;
-    --surface: #151f2b;
-    --ink: #e5eaf0;
-    --muted: #9aa6b5;
-    --line: #273444;
-    --accent: #dda552;
-    --accent-ink: #1a1206;
-    --accent-soft: #3a2d18;
+    --paper: #0e1522;
+    --surface: #172031;
+    --ink: #ece6dc;
+    --muted: #a69e92;
+    --line: #2b3548;
+    --accent: #d9c4a1;
+    --accent-ink: #1d2b45;
+    --accent-soft: #2e2a24;
+    --accent-line: #5a4e3c;
+    --hl: #d9c4a1;
     --sky: #86abd3;
     --sky-soft: #1c2c3f;
     --ok: #5dbb8c;
@@ -41,6 +63,12 @@
     --bad: #e57a68;
     --bad-soft: #3d1f1a;
     color-scheme: dark;
+  }
+  :root[data-theme="dark"][data-tone="gold"] {
+    --accent: #dda552;
+    --accent-soft: #3a2d18;
+    --accent-line: #6b5226;
+    --hl: #dda552;
   }
 }
 
@@ -53,6 +81,8 @@
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-hl: var(--hl);
   --color-sky: var(--sky);
   --color-sky-soft: var(--sky-soft);
   --color-ok: var(--ok);
@@ -89,6 +119,14 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* grid ที่ไม่ได้กำหนด grid-cols-* จะได้คอลัมน์ auto ซึ่งยืดตามข้อความยาวที่ truncate/nowrap
+   จนกว้างเกินจอมือถือ (ทั้งหน้าเลื่อนข้างได้) — ล็อกให้คอลัมน์เดียวไม่เกินกรอบ; grid-cols-* ใน utilities ทับได้ตามปกติ */
+@layer base {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @layer components {
@@ -161,6 +199,25 @@ body {
     font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
+  }
+}
+
+@media screen {
+  :root {
+    --phone-w: 430px;
+  }
+  html[data-view="phone"] {
+    background: var(--line);
+  }
+  html[data-view="phone"] body {
+    max-width: var(--phone-w);
+    margin-inline: auto;
+    box-shadow: 0 0 40px rgb(0 0 0 / 0.25);
+  }
+  /* แถบล่าง / ปุ่มบันทึกที่ fixed เต็มจอ ให้อยู่ในกรอบมือถือ */
+  html[data-view="phone"] .fixed.inset-x-0 {
+    left: max(0px, calc(50% - var(--phone-w) / 2));
+    right: max(0px, calc(50% - var(--phone-w) / 2));
   }
 }
 

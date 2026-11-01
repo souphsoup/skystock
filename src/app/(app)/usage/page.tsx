@@ -146,7 +146,7 @@ export default async function UsagePage({ searchParams }: PageProps<"/usage">) {
             <h2 id="users-h" className="font-semibold">
               {t("รายคน")}
             </h2>
-            <Link href="/history" className="text-sm text-accent">
+            <Link href="/history" className="text-sm text-hl">
               {t("ประวัติการแก้ไข ›")}
             </Link>
           </div>

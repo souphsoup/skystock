@@ -14,7 +14,7 @@ export default async function SignupPage() {
         <div className="mb-6 flex justify-end">
           <LangSwitch compact />
         </div>
-        <p className="text-sm font-semibold tracking-wide text-accent">MAI The Sky Bar</p>
+        <p className="text-sm font-semibold tracking-wide text-hl">MAI The Sky Bar</p>
         <h1 className="mt-1 text-3xl font-bold">{t("สมัครใช้งาน")}</h1>
         <p className="mt-1 text-muted">{t("กรอกข้อมูลแล้วรอ Admin อนุมัติ จึงจะเข้าระบบได้")}</p>
       </div>

@@ -19,7 +19,7 @@ export default async function ConsoleStockPage({ searchParams }: PageProps<"/adm
     <main className="mx-auto max-w-7xl px-4 pt-5 lg:px-8 lg:pt-8">
       <ConsoleHeader
         eyebrow={`MAI The Sky Bar · ${fmtRange(from, to, lang)}`}
-        title={t("รายงานสต๊อก")}
+        title={t("รายงานสต็อก")}
         right={
           <>
             <RangeTabs path="/admin/stock" range={range} t={t} />

@@ -8,9 +8,9 @@ export function DigestPreview({ digest: d }: { digest: Digest }) {
   const t = makeT(d.lang);
   return (
     <article className="card overflow-hidden" aria-label={t("ตัวอย่างสรุปตอนเช้า")} lang={d.lang}>
-      <header className="bg-[#15212f] px-4 py-3">
+      <header className="bg-[#1d2b45] px-4 py-3">
         <b className="block text-lg text-white">{d.title}</b>
-        <span className="text-sm text-[#c9b48a]">{d.subtitle}</span>
+        <span className="text-sm text-[#d9c4a1]">{d.subtitle}</span>
       </header>
       <div className="grid gap-4 p-4">
         <div>
@@ -30,7 +30,7 @@ export function DigestPreview({ digest: d }: { digest: Digest }) {
         </dl>
         {d.sections.map((sec) => (
           <section key={sec.title} className="border-t border-line pt-3">
-            <h3 className="mb-1 text-sm font-semibold text-accent">{sec.title}</h3>
+            <h3 className="mb-1 text-sm font-semibold text-hl">{sec.title}</h3>
             <ul className="grid gap-1 text-sm">
               {sec.rows.map((r) => (
                 <li key={r.left} className="flex justify-between gap-3">

@@ -337,7 +337,7 @@ export function MovementForm({
                     </span>
                     {i.path && <span className="block truncate text-xs text-muted">{i.path}</span>}
                   </span>
-                  <span className="shrink-0 text-sm font-semibold text-accent">+ {i.unit}</span>
+                  <span className="shrink-0 text-sm font-semibold text-hl">+ {i.unit}</span>
                 </button>
               </li>
             ))}

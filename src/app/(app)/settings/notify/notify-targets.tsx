@@ -179,7 +179,7 @@ function TargetRow({ target: tg }: { target: Target }) {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="btn btn-ghost min-h-10 px-2 text-sm text-accent"
+          className="btn btn-ghost min-h-10 px-2 text-sm text-hl"
           disabled={pending}
           onClick={() => run(() => sendTestAction(tg.id), (r) => sentText(t, r))}
         >

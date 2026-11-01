@@ -90,7 +90,7 @@ export function InstallGate() {
         <div className="flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- static app icon */}
           <img src="/icons/icon-192.png" alt="" width={80} height={80} className="rounded-2xl" />
-          <p className="mt-4 text-sm font-semibold tracking-wide text-accent">MAI The Sky Bar</p>
+          <p className="mt-4 text-sm font-semibold tracking-wide text-hl">MAI The Sky Bar</p>
           <h1 className="mt-1 text-2xl font-bold">{t("ติดตั้ง meStock ลงเครื่อง")}</h1>
           <p className="mt-1 text-muted">{t("เปิดจากไอคอนบนหน้าจอ ใช้งานได้แม้สัญญาณหลุด")}</p>
         </div>

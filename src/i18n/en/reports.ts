@@ -59,7 +59,7 @@ const reports: Record<string, string> = {
   "ยังนับไม่ครบทุกจุด {count} วัน": "Not all locations counted: {count} {days, day, days} complete",
   "เรื่องที่ต้องจัดการ": "Needs attention",
   "รอหัวหน้าอนุมัติ {n} รอบนับ": "{n, # count round, # count rounds} waiting for supervisor approval",
-  "{name} หมดสต๊อก {days} วัน": "{name} out of stock for {days, # day, # days}",
+  "{name} หมดสต็อก {days} วัน": "{name} out of stock for {days, # day, # days}",
   "ส่วนต่างผิดปกติ {n} รายการ": "Unusual variance on {n, # item, # items}",
   "ไม่มีเรื่องผิดปกติในช่วงนี้": "Nothing unusual in this period",
   "มูลค่าคงคลัง": "Inventory value",
@@ -110,7 +110,7 @@ const reports: Record<string, string> = {
   "ยกเลิก: {reason}": "Void: {reason}",
 
   // PDF report (/report)
-  "รายงานสต๊อก": "Stock report",
+  "รายงานสต็อก": "Stock report",
   "พิมพ์ / บันทึก PDF": "Print / Save as PDF",
   "พิมพ์เมื่อ {at} โดย {name}": "Printed {at} by {name}",
   "วันที่นับครบทุกจุด": "Days fully counted",

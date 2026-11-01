@@ -113,7 +113,7 @@ export function ProposeItem({
       ) : (
         <button
           type="button"
-          className="btn w-full border-dashed text-accent"
+          className="btn w-full border-dashed text-hl"
           onClick={() => {
             setSent(null);
             setOpen(true);

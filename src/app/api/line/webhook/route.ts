@@ -17,7 +17,7 @@ interface LineEvent {
 
 // The chat's language is unknown when it registers (it starts as Thai), so reply in both.
 const REGISTERED_TH = tk(
-  "เชื่อมแชตนี้กับ meStock แล้ว\nรอ Admin เปิดรับ \"สรุปสต๊อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า",
+  "เชื่อมแชตนี้กับ meStock แล้ว\nรอ Admin เปิดรับ \"สรุปสต็อกตอนเช้า\" ในหน้า ตั้งค่า › สรุปตอนเช้า",
 );
 const REGISTERED = `${REGISTERED_TH}\n\n${translate("en", REGISTERED_TH)}`;
 

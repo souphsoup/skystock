@@ -9,7 +9,7 @@ import { getT } from "@/i18n/server";
 const KIND_STYLE = {
   receive: "bg-ok-soft text-ok",
   issue: "bg-sky-soft text-sky",
-  transfer: "bg-accent-soft text-accent",
+  transfer: "bg-accent-soft text-hl",
   waste: "bg-bad-soft text-bad",
 } as const;
 

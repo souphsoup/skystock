@@ -15,7 +15,7 @@ export default async function CountPickerPage() {
 
   return (
     <main className="mx-auto max-w-xl px-4 pt-5">
-      <h1 className="mb-1 text-2xl font-bold">{t("นับสต๊อก")}</h1>
+      <h1 className="mb-1 text-2xl font-bold">{t("นับสต็อก")}</h1>
       <p className="mb-4 text-muted">{t("เลือกจุดที่จะนับ")}</p>
       <TaskList tasks={tasks} />
     </main>

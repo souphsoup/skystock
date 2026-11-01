@@ -16,14 +16,14 @@ import { ConsoleHeader, RangeTabs, rangeOf } from "./parts";
 
 const LOSS_SERIES = [
   { label: tk("ของขาดจากการนับ"), color: "var(--sky)" },
-  { label: tk("ของเสีย"), color: "var(--accent)" },
+  { label: tk("ของเสีย"), color: "var(--hl)" },
 ];
 
 const CELL: Record<CountStatus | "none", { label: string; cls: string }> = {
   approved: { label: tk("อนุมัติแล้ว"), cls: "bg-ok" },
   submitted: { label: tk("รอหัวหน้าตรวจ"), cls: "bg-sky" },
   recount: { label: tk("ต้องนับซ้ำ"), cls: "bg-bad" },
-  draft: { label: tk("กำลังนับ"), cls: "bg-accent-soft border border-accent" },
+  draft: { label: tk("กำลังนับ"), cls: "bg-accent-soft border border-accent-line" },
   none: { label: tk("ไม่ได้นับ"), cls: "border border-line" },
 };
 
@@ -290,13 +290,13 @@ export default async function ConsolePage({ searchParams }: PageProps<"/admin">)
                     </b>
                   </span>
                   <span className="mt-1 block h-2 rounded-r bg-paper">
-                    <span className="block h-2 rounded-r bg-accent" style={{ width: `${(r.value / wasteTotal) * 100}%` }} />
+                    <span className="block h-2 rounded-r bg-hl" style={{ width: `${(r.value / wasteTotal) * 100}%` }} />
                   </span>
                 </li>
               ))}
             </ul>
           )}
-          <Link href="/movements" className="mt-4 inline-block text-sm text-accent">
+          <Link href="/movements" className="mt-4 inline-block text-sm text-hl">
             {t("ดูรายการรับ · เบิก · โอน · ของเสีย ›")}
           </Link>
         </section>

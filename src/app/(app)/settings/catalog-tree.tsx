@@ -132,7 +132,7 @@ export function CatalogTree({ catalog }: { catalog: Catalog }) {
           type="button"
           aria-pressed={selecting}
           onClick={() => (selecting ? stopSelecting() : (setSelecting(true), setNotice(null)))}
-          className={`pill min-h-10 border px-4 text-sm ${selecting ? "border-accent bg-accent-soft text-accent" : "border-line bg-surface text-ink"}`}
+          className={`pill min-h-10 border px-4 text-sm ${selecting ? "border-accent-line bg-accent-soft text-hl" : "border-line bg-surface text-ink"}`}
         >
           {selecting ? t("✓ กำลังเลือก · {n}", { n: selected.size }) : t("เลือกหลายรายการ")}
         </button>
@@ -141,7 +141,7 @@ export function CatalogTree({ catalog }: { catalog: Catalog }) {
             type="button"
             aria-pressed={showOff}
             onClick={() => setShowOff((v) => !v)}
-            className={`pill min-h-10 border px-4 text-sm ${showOff ? "border-accent bg-accent-soft text-accent" : "border-line bg-surface text-muted"}`}
+            className={`pill min-h-10 border px-4 text-sm ${showOff ? "border-accent-line bg-accent-soft text-hl" : "border-line bg-surface text-muted"}`}
           >
             {showOff ? t("ซ่อนที่ปิดใช้งาน") : t("แสดงที่ปิดใช้งาน ({n})", { n: offCount })}
           </button>
@@ -284,7 +284,7 @@ function CategoryBody({
         </ul>
       )}
       {children.map((child) => (
-        <div key={child.id} className="mt-2 border-l-2 border-accent/40 pl-3">
+        <div key={child.id} className="mt-2 border-l-2 border-accent-line pl-3">
           <p className="pt-1">
             <b>{child.name}</b>
             <span className="ml-2 text-sm text-muted">
@@ -310,7 +310,7 @@ function SelectAll({ category, items }: { category: CatalogCategory; items: Cata
   return (
     <button
       type="button"
-      className="min-h-10 py-2 text-left text-sm font-semibold text-accent"
+      className="min-h-10 py-2 text-left text-sm font-semibold text-hl"
       onClick={() => selection.set(items.map((i) => i.id), !every)}
     >
       {every ? t("เอาออกทั้ง{name}", { name: category.name }) : t("เลือกทั้ง{name} ({n})", { name: category.name, n: items.length })}
@@ -385,7 +385,7 @@ function AddCategory({ parent, label }: { parent: CatalogCategory | null; label:
   const { t } = useT();
   if (!editing) {
     return (
-      <button type="button" className="mt-1 min-h-11 text-left text-sm font-semibold text-accent" onClick={() => setEditing(true)}>
+      <button type="button" className="mt-1 min-h-11 text-left text-sm font-semibold text-hl" onClick={() => setEditing(true)}>
         {label}
       </button>
     );
@@ -492,7 +492,7 @@ function CategoryActions({ category, items }: { category: CatalogCategory; items
         </form>
       ) : (
         <div className="flex gap-4 text-sm">
-          <Link href={`/settings/items/new?category=${category.id}`} className="min-h-10 py-2 font-semibold text-accent">
+          <Link href={`/settings/items/new?category=${category.id}`} className="min-h-10 py-2 font-semibold text-hl">
             {t("+ เพิ่มรายการใน{name}", { name: category.name })}
           </Link>
           <button type="button" className="min-h-10 py-2 text-muted underline" onClick={() => setEditing(true)}>

@@ -3,7 +3,7 @@ import { makeT, tk, type Lang } from "@/i18n";
 
 const COUNT_STATUS: Record<CountStatus | "none", { label: string; cls: string; mark: string }> = {
   none: { label: tk("ยังไม่เริ่ม"), cls: "bg-sky-soft text-sky", mark: "○" },
-  draft: { label: tk("กำลังนับ"), cls: "bg-accent-soft text-accent", mark: "◐" },
+  draft: { label: tk("กำลังนับ"), cls: "bg-accent-soft text-hl", mark: "◐" },
   submitted: { label: tk("รอหัวหน้าตรวจ"), cls: "bg-sky-soft text-sky", mark: "◔" },
   recount: { label: tk("ต้องนับซ้ำ"), cls: "bg-bad-soft text-bad", mark: "↺" },
   approved: { label: tk("อนุมัติแล้ว"), cls: "bg-ok-soft text-ok", mark: "✓" },

@@ -94,7 +94,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                 <Issue tone="sky" title={t("รอหัวหน้าอนุมัติ {n} รอบนับ", { n: ov.pendingReview })} href="/review" />
               )}
               {ov.outOfStock.map((o) => (
-                <Issue key={o.name} tone="bad" title={t("{name} หมดสต๊อก {days} วัน", { name: o.name, days: o.days })} />
+                <Issue key={o.name} tone="bad" title={t("{name} หมดสต็อก {days} วัน", { name: o.name, days: o.days })} />
               ))}
               {ov.variances.length > 0 && (
                 <Issue

@@ -78,7 +78,7 @@ const settings: Record<string, string> = {
   "ปิดแล้วรายการจะไม่อยู่ในใบนับ แต่ประวัติการนับและรายงานเดิมยังอยู่ครบ":
     "Inactive items leave the count sheet, but past counts and reports are kept",
   // users & access
-  "นับสต๊อก": "Count stock",
+  "นับสต็อก": "Count stock",
   "นับ + ตรวจอนุมัติ + ตั้งค่ารายการ": "Counts + reviews + item settings",
   "ดูภาพรวมและรายงาน": "Views overview and reports",
   "ทุกอย่าง + จัดการผู้ใช้": "Everything + manages users",

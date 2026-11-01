@@ -43,7 +43,7 @@ function NavLabel({ item, active }: { item: NavItem; active: boolean }) {
   const Icon = ICONS[item.icon];
   return (
     <>
-      <span className={`flex flex-col items-center gap-0.5 ${active || pending ? "text-accent" : "text-muted"}`}>
+      <span className={`flex flex-col items-center gap-0.5 ${active || pending ? "text-hl" : "text-muted"}`}>
         <Icon />
         {item.label}
       </span>

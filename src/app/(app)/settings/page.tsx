@@ -21,7 +21,7 @@ export default async function SettingsPage() {
       {can.users(user.role) && (
         <nav className="card mb-4 divide-y divide-line" aria-label={t("ตั้งค่าระบบ")}>
           <Link href="/settings/users" className="flex min-h-14 items-center gap-3 px-4">
-            <IconUser className="text-accent" />
+            <IconUser className="text-hl" />
             <span className="flex-1 font-semibold">{t("ผู้ใช้และสิทธิ์")}</span>
             {signups > 0 && <span className="pill bg-accent text-white">{t("รออนุมัติ {n}", { n: signups })}</span>}
             <span className="text-muted" aria-hidden>
@@ -29,7 +29,7 @@ export default async function SettingsPage() {
             </span>
           </Link>
           <Link href="/settings/notify" className="flex min-h-14 items-center gap-3 px-4">
-            <IconBell className="text-accent" />
+            <IconBell className="text-hl" />
             <span className="flex-1">
               <b className="block">{t("สรุปตอนเช้า")}</b>
               <span className="text-sm text-muted">{t("ส่งเข้า LINE และอีเมล 08:00 น.")}</span>
@@ -39,7 +39,7 @@ export default async function SettingsPage() {
             </span>
           </Link>
           <Link href="/usage" className="flex min-h-14 items-center gap-3 px-4">
-            <IconChart className="text-accent" />
+            <IconChart className="text-hl" />
             <span className="flex-1">
               <b className="block">{t("การใช้งานแอป")}</b>
               <span className="text-sm text-muted">{t("ใครเข้าใช้ นับไปเท่าไหร่ วันนี้")}</span>

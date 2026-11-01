@@ -4,11 +4,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "meStock",
     short_name: "meStock",
-    description: "นับสต๊อกครัวและบาร์จากมือถือ",
+    description: "ระบบบริหารสินค้าคงคลัง",
     start_url: "/",
     display: "standalone",
-    background_color: "#f3f5f8",
-    theme_color: "#2b4c70",
+    background_color: "#f6f3ee",
+    theme_color: "#1d2b45",
     lang: "th",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
