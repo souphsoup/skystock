@@ -2,6 +2,7 @@
 
 import { tk } from "@/i18n";
 import type { SheetProposal } from "./proposal-types";
+import type { CountComment } from "./comment-types";
 
 export type Role = "operation" | "supervisor" | "manager" | "admin";
 export type CountStatus = "draft" | "submitted" | "recount" | "approved";
@@ -53,6 +54,8 @@ export interface Sheet {
   lines: SheetLine[];
   /** items staff proposed for this location (missing on sheets cached before this field existed) */
   proposals?: SheetProposal[];
+  /** messages between staff and the supervisor in this round (missing on older cached sheets) */
+  comments?: CountComment[];
   fetchedAt: number;
 }
 

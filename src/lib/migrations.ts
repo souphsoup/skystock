@@ -296,4 +296,22 @@ alter table login_events drop constraint if exists login_events_reason_check;
 alter table login_events add constraint login_events_reason_check check (reason in ('bad_pin','locked','unknown','pending'));
 `,
   },
+  {
+    id: "009_count_comments",
+    sql: `
+-- ข้อความในรอบนับ ระหว่างพนักงานกับหัวหน้า: item_id = null คือข้อความถึงทั้งรอบ, มีค่า = คุยเรื่องรายการนั้น
+-- เพิ่มได้อย่างเดียว ไม่มีแก้หรือลบ (เป็นหลักฐานคู่กับ audit_log)
+create table count_comments (
+  id serial primary key,
+  count_id int not null references counts(id) on delete cascade,
+  item_id int references items(id),
+  client_id uuid unique, -- idempotency key from the device's offline queue
+  body text not null check (length(body) between 1 and 500),
+  created_by int not null references users(id),
+  created_at timestamptz not null default now()
+);
+create index count_comments_count_idx on count_comments (count_id, created_at);
+alter table count_comments enable row level security;
+`,
+  },
 ];

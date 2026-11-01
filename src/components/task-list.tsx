@@ -15,6 +15,7 @@ export async function TaskList({ tasks }: { tasks: LocationTask[] }) {
               <b>{task.locationName}</b>
               <span className="block text-sm text-muted">
                 {t("{counted}/{items} รายการ · ก่อน {time}", { counted: task.counted, items: task.items, time: task.dueTime })}
+                {task.comments > 0 && <span className="text-sky"> · 💬 {task.comments}</span>}
               </span>
             </span>
             <CountStatusPill status={task.status} lang={lang} />

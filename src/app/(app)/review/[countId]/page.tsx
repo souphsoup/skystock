@@ -6,7 +6,8 @@ import { fmtTime, fmtWeekday } from "@/lib/dates";
 import { can } from "@/lib/types";
 import { CountStatusPill, fmtQty } from "@/components/status";
 import { IconBack } from "@/components/icons";
-import { ApproveMatchedButton, FlaggedLine, RecountLineButton } from "./review-actions";
+import { AutoRefresh } from "@/components/auto-refresh";
+import { ApproveMatchedButton, FlaggedLine, RecountLineButton, ReviewComments } from "./review-actions";
 import { getT } from "@/i18n/server";
 
 export default async function ReviewPage({ params }: PageProps<"/review/[countId]">) {
@@ -28,9 +29,13 @@ export default async function ReviewPage({ params }: PageProps<"/review/[countId
   const confirmed = review.lines.filter((l) => l.status === "confirmed");
   const pending = review.lines.filter((l) => l.status === "pending");
   const active = review.status === "submitted" || review.status === "recount";
+  const commentsOn = (itemId: number) => review.comments.filter((c) => c.itemId === itemId);
+  const itemNames = Object.fromEntries(review.lines.map((l) => [l.itemId, l.name]));
 
   return (
     <main className="mx-auto max-w-xl px-4 pt-4">
+      {/* Staff replies and recounts show up without reloading */}
+      {review.status !== "approved" && <AutoRefresh seconds={30} />}
       <Link href="/review" className="btn btn-ghost -ml-3 mb-1 min-h-11 px-2 text-sm text-muted">
         <IconBack width={18} height={18} /> {t("รายการรอตรวจ")}
       </Link>
@@ -75,7 +80,7 @@ export default async function ReviewPage({ params }: PageProps<"/review/[countId
           </h2>
           <ul className="grid gap-3">
             {flagged.map((l) => (
-              <FlaggedLine key={l.itemId} countId={review.countId} line={l} />
+              <FlaggedLine key={l.itemId} countId={review.countId} line={l} comments={commentsOn(l.itemId)} />
             ))}
           </ul>
         </section>
@@ -86,9 +91,18 @@ export default async function ReviewPage({ params }: PageProps<"/review/[countId
           <h2 className="mb-2 font-semibold">{t("รอพนักงานนับซ้ำ")}</h2>
           <ul className="card divide-y divide-line">
             {recount.map((l) => (
-              <li key={l.itemId} className="flex items-center justify-between px-4 py-3">
-                <span className="font-semibold">{l.name}</span>
-                <span className="pill bg-bad-soft text-bad">↺ {t("นับซ้ำ")}</span>
+              <li key={l.itemId} className="px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">{l.name}</span>
+                  <span className="pill bg-bad-soft text-bad">↺ {t("นับซ้ำ")}</span>
+                </div>
+                <ReviewComments
+                  countId={review.countId}
+                  itemId={l.itemId}
+                  blind={l.blind}
+                  title={t("บอกคนนับว่าให้ดูอะไร")}
+                  comments={commentsOn(l.itemId)}
+                />
               </li>
             ))}
           </ul>
@@ -130,6 +144,15 @@ export default async function ReviewPage({ params }: PageProps<"/review/[countId
           </table>
         </details>
       )}
+
+      <ReviewComments
+        className="card mb-5 px-4 py-1 pb-3"
+        countId={review.countId}
+        itemId={null}
+        title={t("ข้อความในรอบนับนี้")}
+        comments={review.comments}
+        itemNames={itemNames}
+      />
 
       {active && matched.length > 0 && <ApproveMatchedButton countId={review.countId} count={matched.length} />}
     </main>

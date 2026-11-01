@@ -97,6 +97,7 @@ function QueueCard({ q, t, lang }: { q: QueueItem; t: TFn; lang: Lang }) {
             {q.submittedAt ? ` ${fmtTime(q.submittedAt, lang)}` : ""} · {t("{n} รายการ", { n: q.total })}
             {q.flagged > 0 && ` · ${t("ต้องดู {n}", { n: q.flagged })}`}
             {q.recount > 0 && ` · ${t("รอนับซ้ำ {n}", { n: q.recount })}`}
+            {q.comments > 0 && ` · 💬 ${q.comments}`}
           </span>
         </span>
         <CountStatusPill status={q.status} lang={lang} />

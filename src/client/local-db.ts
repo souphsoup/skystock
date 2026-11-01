@@ -7,6 +7,7 @@ import Dexie, { type Table } from "dexie";
 import type { LineInput, Sheet } from "@/lib/types";
 import type { MoveInput } from "@/lib/movement-types";
 import type { ProposalInput } from "@/lib/proposal-types";
+import type { CommentInput } from "@/lib/comment-types";
 
 export interface PendingEdit extends LineInput {
   key: string; // `${countId}:${itemId}`
@@ -33,12 +34,22 @@ export interface PendingProposal {
   payload: ProposalInput;
 }
 
+/** A message in a count round waiting to be sent. */
+export interface PendingComment {
+  clientId: string;
+  countId: number;
+  locationId: number;
+  payload: CommentInput;
+  at: number;
+}
+
 class LocalDb extends Dexie {
   sheets!: Table<Sheet, number>; // keyed by locationId
   edits!: Table<PendingEdit, string>;
   submits!: Table<PendingSubmit, number>;
   moves!: Table<PendingMove, string>;
   proposals!: Table<PendingProposal, string>;
+  comments!: Table<PendingComment, string>;
 
   constructor() {
     super("sop-stock");
@@ -53,6 +64,8 @@ class LocalDb extends Dexie {
       .upgrade((tx) => tx.table("sheets").clear());
     // v3: proposed-item outbox
     this.version(3).stores({ proposals: "clientId" });
+    // v4: count-round message outbox
+    this.version(4).stores({ comments: "clientId, countId" });
   }
 }
 
@@ -73,7 +86,8 @@ export async function pendingCount(): Promise<number> {
     (await localDb.edits.count()) +
     (await localDb.submits.count()) +
     (await localDb.moves.count()) +
-    (await localDb.proposals.count())
+    (await localDb.proposals.count()) +
+    (await localDb.comments.count())
   );
 }
 

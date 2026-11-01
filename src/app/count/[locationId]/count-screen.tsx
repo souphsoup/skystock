@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
-import { editKey, localDb, rememberSheet, type PendingEdit } from "@/client/local-db";
+import { editKey, localDb, rememberSheet, type PendingComment, type PendingEdit } from "@/client/local-db";
 import { clearSyncError, fetchSheet, onSheet, scheduleSync, startSync, useSyncState } from "@/client/sync";
 import { businessDate, fmtDateSlash } from "@/lib/dates";
 import { expectedOf, itemLabel, type Sheet, type SheetLine } from "@/lib/types";
@@ -12,6 +12,7 @@ import { Stepper } from "@/components/stepper";
 import { fmtQty } from "@/components/status";
 import { IconBack, IconSearch } from "@/components/icons";
 import { useT } from "@/i18n/client";
+import { CommentThread } from "@/components/comment-thread";
 import { ProposeItem } from "./propose-item";
 
 export function CountScreen({ initial }: { initial: Sheet }) {
@@ -23,6 +24,10 @@ export function CountScreen({ initial }: { initial: Sheet }) {
   const [query, setQuery] = useState("");
   // บันทึกจากคีย์บอร์ด → รายการถัดไปเปิดช่องกรอกค้างไว้ คีย์บอร์ดไม่ต้องหุบ/เด้งใหม่
   const [keypad, setKeypad] = useState(false);
+  const [queuedComments, setQueuedComments] = useState<PendingComment[]>([]);
+  // The figure just saved, shown in the header so a typo can be caught after the card moves on.
+  const [lastSaved, setLastSaved] = useState<{ itemId: number; qty: number } | null>(null);
+  const [reviewing, setReviewing] = useState(false);
   const sync = useSyncState();
   const { t } = useT();
   const cardRef = useRef<HTMLElement>(null);
@@ -82,6 +87,25 @@ export function CountScreen({ initial }: { initial: Sheet }) {
   useEffect(() => {
     if (!sync.syncing) reloadLocal(countId);
   }, [sync.syncing, sync.pending, countId, reloadLocal]);
+
+  // Messages typed on this device that have not reached the server yet
+  useEffect(() => {
+    void readQueuedComments(countId).then(setQueuedComments);
+  }, [countId, sync.syncing, sync.pending]);
+
+  /** Saved on the device first (works with no signal), then sent by the sync loop. */
+  async function sendComment(itemId: number | null, body: string): Promise<string | null> {
+    const clientId = crypto.randomUUID();
+    await localDb.comments.put({ clientId, countId, locationId: sheet.locationId, payload: { clientId, itemId, body }, at: Date.now() });
+    setQueuedComments(await readQueuedComments(countId));
+    scheduleSync(0);
+    return null;
+  }
+
+  const comments = sheet.comments ?? [];
+  const queued = queuedComments.map((c) => ({ key: c.clientId, itemId: c.payload.itemId, body: c.payload.body }));
+  const messagesAbout = (itemId: number) =>
+    comments.filter((c) => c.itemId === itemId).length + queued.filter((q) => q.itemId === itemId).length;
 
   const lines = useMemo<SheetLine[]>(
     () =>
@@ -276,8 +300,20 @@ export function CountScreen({ initial }: { initial: Sheet }) {
             onDone={(counted, keepKeyboard) => {
               // Render the next card and focus its input inside this tap, so the keyboard stays up.
               void update(selected, { counted });
+              setLastSaved({ itemId: selected.itemId, qty: counted });
               flushSync(() => goNext(selected, keepKeyboard));
             }}
+          />
+        )}
+        {!readOnly && selected && selected.editable && (
+          <CommentThread
+            key={`c${selected.itemId}`}
+            className="card -mt-2 mb-4 px-4 py-1 pb-3"
+            title={t("ข้อความเรื่อง {name}", { name: itemLabel(selected) })}
+            comments={comments.filter((c) => c.itemId === selected.itemId)}
+            queued={queued.filter((q) => q.itemId === selected.itemId)}
+            placeholder={t("เช่น ของอยู่อีกตู้ นับรวมแล้ว")}
+            onSend={(body) => sendComment(selected.itemId, body)}
           />
         )}
 
@@ -309,7 +345,14 @@ export function CountScreen({ initial }: { initial: Sheet }) {
                 }`}
               >
                 <span className="min-w-0">
-                  <span className="block truncate font-semibold">{itemLabel(l)}</span>
+                  <span className="block truncate font-semibold">
+                    {itemLabel(l)}
+                    {messagesAbout(l.itemId) > 0 && (
+                      <span className="ml-1.5 text-sm font-normal text-sky" aria-label={t("ข้อความ {n}", { n: messagesAbout(l.itemId) })}>
+                        💬 {messagesAbout(l.itemId)}
+                      </span>
+                    )}
+                  </span>
                   <span className="block truncate text-sm text-muted">
                     {l.nameTh} · {l.unit}
                     {l.blind && " · Blind"}
@@ -321,6 +364,19 @@ export function CountScreen({ initial }: { initial: Sheet }) {
           ))}
           {visible.length === 0 && <li className="px-4 py-6 text-center text-muted">{t("ไม่พบรายการ")}</li>}
         </ul>
+
+        <CommentThread
+          className="card mt-4 px-4 py-1 pb-3"
+          title={t("ข้อความในรอบนับนี้")}
+          comments={comments}
+          queued={queued}
+          itemName={(id) => {
+            const l = sheet.lines.find((x) => x.itemId === id);
+            return l && itemLabel(l);
+          }}
+          placeholder={t("ฝากข้อความถึงหัวหน้า")}
+          onSend={(body) => sendComment(null, body)}
+        />
 
         <ProposeItem
           locationId={sheet.locationId}
@@ -406,6 +462,11 @@ async function readOutbox(countId: number) {
     edits: new Map(list.map((e) => [e.itemId, e])),
     submitQueued: !!(await localDb.submits.get(countId)),
   };
+}
+
+async function readQueuedComments(countId: number) {
+  const list = await localDb.comments.where("countId").equals(countId).toArray();
+  return list.sort((a, b) => a.at - b.at);
 }
 
 function LineState({ line }: { line: SheetLine }) {

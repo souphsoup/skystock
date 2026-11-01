@@ -1,10 +1,14 @@
 import "server-only";
+import { cache } from "react";
 import { getDb, type Db } from "./db";
 import { sheetProposals } from "./proposal-sheet";
+import { countComments } from "./comments";
+import type { CountComment } from "./comment-types";
 import { tk } from "@/i18n";
 import { HttpError, type User } from "./session";
 import { addDays, businessDate, daysBetween } from "./dates";
 import {
+  can,
   round2,
   type CountStatus,
   type LineInput,
@@ -206,6 +210,7 @@ async function loadSheet(db: Db, user: User, countId: number): Promise<Sheet> {
     status: c.status,
     lines,
     proposals: await sheetProposals(db, c.location_id, c.business_date),
+    comments: await countComments(db, user, c.id),
     fetchedAt: Date.now(),
   };
 }
@@ -318,6 +323,7 @@ export interface Review {
   submittedBy: string | null;
   submittedAt: Date | null;
   lines: ReviewLine[];
+  comments: CountComment[];
 }
 
 function varianceHint(l: { variance: number | null; inQty: number; outQty: number }): string | null {
@@ -357,6 +363,7 @@ export async function getReview(user: User, countId: number): Promise<Review> {
     status: c.status,
     submittedBy: c.submitted_by_name,
     submittedAt: c.submitted_at,
+    comments: await countComments(db, user, c.id),
     lines: rows.map((r) => {
       const variance = r.expected === null || r.counted === null ? null : round2(r.counted - r.expected);
       const base = { variance, inQty: r.in_qty, outQty: r.out_qty };
@@ -492,6 +499,7 @@ export interface QueueItem {
   total: number;
   flagged: number;
   recount: number;
+  comments: number;
 }
 
 export async function reviewQueue(user: User): Promise<{ pending: QueueItem[]; recent: QueueItem[] }> {
@@ -506,11 +514,13 @@ export async function reviewQueue(user: User): Promise<{ pending: QueueItem[]; r
     total: number;
     flagged: number;
     recount: number;
+    comments: number;
   }>(
     `select c.id, loc.name as location_name, c.business_date, c.status, u.name as submitted_by_name, c.submitted_at,
             count(l.item_id) as total,
             count(l.item_id) filter (where l.status = 'flag') as flagged,
-            count(l.item_id) filter (where l.status = 'recount') as recount
+            count(l.item_id) filter (where l.status = 'recount') as recount,
+            (select count(*) from count_comments cc where cc.count_id = c.id) as comments
      from counts c join locations loc on loc.id = c.location_id
      left join users u on u.id = c.submitted_by
      left join count_lines l on l.count_id = c.id
@@ -529,6 +539,7 @@ export async function reviewQueue(user: User): Promise<{ pending: QueueItem[]; r
     total: r.total,
     flagged: r.flagged,
     recount: r.recount,
+    comments: r.comments,
   }));
   return {
     pending: items.filter((i) => i.status === "submitted" || i.status === "recount"),
@@ -547,6 +558,7 @@ export interface LocationTask {
   status: CountStatus | null;
   counted: number;
   recount: number;
+  comments: number;
 }
 
 export async function todayTasks(user: User, date = businessDate()): Promise<LocationTask[]> {
@@ -560,12 +572,14 @@ export async function todayTasks(user: User, date = businessDate()): Promise<Loc
     status: CountStatus | null;
     counted: number | null;
     recount: number | null;
+    comments: number | null;
   }>(
     `select loc.id, loc.name, to_char(loc.due_time, 'HH24:MI') as due_time,
             (select count(*) from items i where i.location_id = loc.id and i.active) as items,
             c.id as count_id, c.status,
             (select count(*) from count_lines l where l.count_id = c.id and l.counted is not null) as counted,
-            (select count(*) from count_lines l where l.count_id = c.id and l.status = 'recount') as recount
+            (select count(*) from count_lines l where l.count_id = c.id and l.status = 'recount') as recount,
+            (select count(*) from count_comments cc where cc.count_id = c.id) as comments
      from locations loc
      left join counts c on c.location_id = loc.id and c.business_date = $2
      where loc.outlet_id = $1 and loc.active

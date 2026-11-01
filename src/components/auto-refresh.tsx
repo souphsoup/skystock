@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-/** Reloads the server data every minute while the tab is visible (today's usage only). */
+/** Reloads the server data every `seconds` while the tab is visible (usage page, review thread). */
 export function AutoRefresh({ seconds = 60 }: { seconds?: number }) {
   const router = useRouter();
   useEffect(() => {

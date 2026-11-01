@@ -6,7 +6,7 @@ import { can, ROLE_LABEL } from "@/lib/types";
 import { CountStatusPill, PageHeader } from "@/components/status";
 import { tk, type TFn } from "@/i18n";
 import { getT } from "@/i18n/server";
-import { AutoRefresh } from "./auto-refresh";
+import { AutoRefresh } from "@/components/auto-refresh";
 
 const DAYS = 7;
 

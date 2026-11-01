@@ -167,6 +167,29 @@ async function pushProposals() {
   }
 }
 
+async function pushComments() {
+  // Oldest first, so a conversation typed offline arrives in order.
+  const list = (await localDb.comments.toArray()).sort((a, b) => a.at - b.at);
+  const sent = new Set<number>();
+  try {
+    for (const c of list) {
+      try {
+        await post(`/api/counts/${c.countId}/comments`, c.payload);
+      } catch (e) {
+        if (!(e instanceof HttpFailure)) throw e; // network: try again later
+        if (e.status === 401 || e.status >= 500) throw e;
+        // Rejected for good (count gone, too long…): tell the person and drop it.
+        set({ error: { text: tk("ข้อความ: {error} (ไม่ได้ส่ง)"), params: { error: e.message } } });
+      }
+      await localDb.comments.delete(c.clientId);
+      sent.add(c.locationId);
+    }
+  } finally {
+    // Show the sent messages in the thread (with the supervisor's replies so far)
+    for (const locationId of sent) await fetchSheet(locationId).then(receiveSheet, () => {});
+  }
+}
+
 let running: Promise<void> | null = null;
 let again = false;
 
@@ -186,6 +209,7 @@ export function syncNow(): Promise<void> {
         await pushProposals();
         await pushEdits();
         await pushSubmits();
+        await pushComments();
         set({ authRequired: false });
       } catch (e) {
         if (e instanceof HttpFailure && e.status === 401) set({ authRequired: true });

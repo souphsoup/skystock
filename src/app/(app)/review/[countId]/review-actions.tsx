@@ -8,6 +8,9 @@ import {
   recountLineAction,
   recountMatchedAction,
 } from "@/app/actions/review";
+import { addCommentAction } from "@/app/actions/comments";
+import type { CountComment } from "@/lib/comment-types";
+import { CommentThread } from "@/components/comment-thread";
 import type { ReviewLine } from "@/lib/stock";
 import { fmtQty, fmtSigned } from "@/components/status";
 import { useT } from "@/i18n/client";
@@ -23,7 +26,36 @@ function useAction() {
   return { pending, error, run };
 }
 
-export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLine }) {
+/** Supervisor's side of a count-round thread (whole round when itemId is null). */
+export function ReviewComments({
+  countId,
+  itemId,
+  blind = false,
+  ...props
+}: {
+  countId: number;
+  itemId: number | null;
+  blind?: boolean;
+  title: string;
+  comments: CountComment[];
+  itemNames?: Record<number, string>;
+  className?: string;
+}) {
+  const { t } = useT();
+  const { itemNames, ...rest } = props;
+  return (
+    <CommentThread
+      {...rest}
+      itemName={itemNames && ((id) => itemNames[id])}
+      placeholder={itemId === null ? t("ข้อความถึงคนนับรอบนี้") : t("เช่น ช่วยดูชั้นล่างของตู้อีกครั้ง")}
+      // Staff read these on the count screen: don't give away the system figure of a Blind item.
+      warn={blind ? t("Blind count: อย่าพิมพ์ยอดที่ควรเหลือ พนักงานจะเห็นข้อความนี้") : null}
+      onSend={async (body) => (await addCommentAction(countId, { clientId: crypto.randomUUID(), itemId, body })).error}
+    />
+  );
+}
+
+export function FlaggedLine({ countId, line, comments }: { countId: number; line: ReviewLine; comments: CountComment[] }) {
   const { pending, error, run } = useAction();
   const { t } = useT();
   const [adjusting, setAdjusting] = useState(false);
@@ -120,6 +152,14 @@ export function FlaggedLine({ countId, line }: { countId: number; line: ReviewLi
           {error}
         </p>
       )}
+      <ReviewComments
+        className="mt-2 border-t border-line pt-1"
+        countId={countId}
+        itemId={line.itemId}
+        blind={line.blind}
+        title={t("ข้อความเรื่องรายการนี้")}
+        comments={comments}
+      />
     </li>
   );
 }
