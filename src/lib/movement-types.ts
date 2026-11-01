@@ -18,6 +18,15 @@ export const WASTE_REASONS: Record<string, string> = {
   other: tk("อื่นๆ"),
 };
 
+/**
+ * Label key for a stored reason, or null if it isn't one of ours. Use this instead of
+ * `reason in WASTE_REASONS` / `WASTE_REASONS[reason]`: those also match inherited names
+ * like "constructor", which once let a bad reason through and broke the Excel export.
+ */
+export function wasteReasonLabel(reason: string | null | undefined): string | null {
+  return reason && Object.hasOwn(WASTE_REASONS, reason) ? WASTE_REASONS[reason] : null;
+}
+
 export interface MoveInput {
   clientId: string;
   kind: MoveKind;

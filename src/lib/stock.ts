@@ -194,7 +194,8 @@ async function loadSheet(db: Db, user: User, countId: number): Promise<Sheet> {
     mvIn: r.mv_in,
     mvOut: r.mv_out,
     counted: r.counted,
-    status: r.status,
+    // ok/flag would tell the counter whether a blind figure matched: only reviewers see that.
+    status: r.blind && (r.status === "ok" || r.status === "flag") ? "pending" : r.status,
     editable: c.status === "draft" || (c.status === "recount" && r.status === "recount"),
   }));
   return {

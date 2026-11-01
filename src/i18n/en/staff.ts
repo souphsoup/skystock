@@ -84,7 +84,18 @@ const staff: Record<string, string> = {
   "รายการในใบนับ": "Items on the count sheet",
   "กำลังส่งยอด…": "Sending count…",
   "ส่งยอดไว้แล้ว ระบบจะส่งให้เองเมื่อกลับมาออนไลน์": "Count saved. It will be sent automatically when you are back online",
-  "ยังเหลือ {n} รายการ": "{n, # item, # items} left",
+  "{qty} {unit} สูงผิดปกติ ตรวจจำนวนและหน่วยอีกครั้ง": "{qty} {unit} looks too high. Check the amount and the unit again.",
+  "ระบบคิดไว้ {qty} {unit}": "The system worked out {qty} {unit}",
+  "แก้ตัวเลข": "Change it",
+  "ใช่ {qty} ถูกต้อง": "Yes, {qty} is right",
+  "แก้": "Fix",
+  "ตรวจก่อนส่ง": "Check before sending",
+  "{n} รายการต่างจากที่ระบบคิดหรือสูงผิดปกติ แตะเพื่อแก้ หรือส่งเลยถ้านับถูกแล้ว":
+    "{n, # item differs, # items differ} from the system figure or look too high. Tap one to fix it, or send if the counts are right.",
+  "สูงผิดปกติ": "Unusually high",
+  "ระบบคิด {qty} ({diff})": "System {qty} ({diff})",
+  "กลับไปแก้": "Go back",
+  "ส่งเลย": "Send now",
   "ส่งยอดนับซ้ำ": "Send recount",
   "ส่งยอดให้หัวหน้าตรวจ": "Send to supervisor",
   "นับซ้ำ": "Recount",
@@ -176,6 +187,8 @@ const staff: Record<string, string> = {
   "ลบตัวสุดท้าย": "Delete last digit",
   "กำลังเข้าสู่ระบบ…": "Signing in…",
   "เข้าสู่ระบบ": "Sign in",
+  "ใส่ผิดครบ 5 ครั้ง บัญชีจะถูกล็อก 5 นาที ลืม PIN ให้หัวหน้าหรือ Admin ตั้ง PIN ใหม่ให้":
+    "After 5 wrong tries the account locks for 5 minutes. Forgot your PIN? A supervisor or Admin can set a new one.",
 
   // errors: movements / files
   "กรุณาเลือก{label}": "{label} is required",

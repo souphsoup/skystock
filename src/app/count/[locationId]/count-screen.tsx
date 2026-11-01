@@ -151,7 +151,27 @@ export function CountScreen({ initial }: { initial: Sheet }) {
     cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // Lines worth a second look before sending: a figure that differs from what the system worked
+  // out (non-blind only; blind lines have no figure here), or one that looks like a typo.
+  const toCheck = useMemo(
+    () =>
+      lines
+        .filter((l) => l.editable && l.counted !== null)
+        .map((l) => {
+          const expected = expectedOf(l);
+          return { line: l, expected, high: looksTooHigh(l.counted!, l), diff: expected === null ? 0 : l.counted! - expected };
+        })
+        .filter((x) => x.high || x.diff !== 0)
+        .sort((a, b) => Number(b.high) - Number(a.high) || Math.abs(b.diff) - Math.abs(a.diff)),
+    [lines],
+  );
+
   async function submit() {
+    if (toCheck.length > 0 && !reviewing) {
+      setReviewing(true);
+      return;
+    }
+    setReviewing(false);
     await localDb.submits.put({ countId, at: Date.now() });
     setSubmitQueued(true);
     scheduleSync(0);
@@ -174,7 +194,20 @@ export function CountScreen({ initial }: { initial: Sheet }) {
         {!readOnly && (
           <div className="mt-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted">{isRecount ? t("นับซ้ำแล้ว") : t("นับแล้ว")}</span>
+              {lastSaved && lines.some((l) => l.itemId === lastSaved.itemId && l.editable) ? (
+                <button
+                  type="button"
+                  className="-my-1.5 min-w-0 truncate py-1.5 text-left text-ok"
+                  onClick={() => pick(lastSaved.itemId)}
+                >
+                  ✓ {itemLabel(lines.find((x) => x.itemId === lastSaved.itemId)!)}{" "}
+                  <span className="num font-semibold">{fmtQty(lastSaved.qty)}</span>{" "}
+                  {lines.find((x) => x.itemId === lastSaved.itemId)!.unit} ·{" "}
+                  <span className="font-semibold underline">{t("แก้")}</span>
+                </button>
+              ) : (
+                <span className="text-muted">{isRecount ? t("นับซ้ำแล้ว") : t("นับแล้ว")}</span>
+              )}
               <span className="num font-semibold">
                 {t("{done} จาก {total}", { done, total: editable.length })}
               </span>
@@ -302,21 +335,63 @@ export function CountScreen({ initial }: { initial: Sheet }) {
         />
       </div>
 
-      {!readOnly && (
+      {/* Hidden until every line is counted: on a short phone it would cover the count card's buttons. */}
+      {!readOnly && (submitQueued || done === editable.length) && (
         <div className="safe-bottom fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 backdrop-blur">
           <div className="mx-auto max-w-xl px-4 py-3">
+            {reviewing && !submitQueued && (
+              <div className="mb-3" role="dialog" aria-labelledby="precheck-title">
+                <h2 id="precheck-title" className="text-lg font-bold">
+                  {t("ตรวจก่อนส่ง")}
+                </h2>
+                <p className="text-sm text-muted">
+                  {t("{n} รายการต่างจากที่ระบบคิดหรือสูงผิดปกติ แตะเพื่อแก้ หรือส่งเลยถ้านับถูกแล้ว", { n: toCheck.length })}
+                </p>
+                <ul className="mt-2 max-h-[40vh] divide-y divide-line overflow-y-auto rounded-xl border border-line">
+                  {toCheck.map(({ line: l, expected, high, diff }) => (
+                    <li key={l.itemId}>
+                      <button
+                        type="button"
+                        className="flex min-h-12 w-full items-center justify-between gap-3 px-3 py-2 text-left"
+                        onClick={() => {
+                          setReviewing(false);
+                          setCategory("all");
+                          setQuery("");
+                          pick(l.itemId);
+                        }}
+                      >
+                        <span className="min-w-0 truncate font-semibold">{itemLabel(l)}</span>
+                        <span className="num shrink-0 text-right text-sm">
+                          <b className="text-base">
+                            {fmtQty(l.counted!)} {l.unit}
+                          </b>
+                          <span className={`block ${high ? "text-warn" : "text-muted"}`}>
+                            {high
+                              ? t("สูงผิดปกติ")
+                              : t("ระบบคิด {qty} ({diff})", { qty: fmtQty(expected!), diff: `${diff > 0 ? "+" : ""}${fmtQty(diff)}` })}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {submitQueued ? (
               <p className="text-center font-semibold text-sky" role="status">
                 {sync.online ? t("กำลังส่งยอด…") : t("ส่งยอดไว้แล้ว ระบบจะส่งให้เองเมื่อกลับมาออนไลน์")}
               </p>
             ) : (
-              <button type="button" className="btn btn-primary w-full text-lg" disabled={done < editable.length} onClick={submit}>
-                {done < editable.length
-                  ? t("ยังเหลือ {n} รายการ", { n: editable.length - done })
-                  : isRecount
-                    ? t("ส่งยอดนับซ้ำ")
-                    : t("ส่งยอดให้หัวหน้าตรวจ")}
-              </button>
+              <div className={reviewing ? "grid grid-cols-[auto_1fr] gap-2" : ""}>
+                {reviewing && (
+                  <button type="button" className="btn" onClick={() => setReviewing(false)}>
+                    {t("กลับไปแก้")}
+                  </button>
+                )}
+                <button type="button" className="btn btn-primary w-full text-lg" disabled={done < editable.length} onClick={submit}>
+                  {reviewing ? t("ส่งเลย") : isRecount ? t("ส่งยอดนับซ้ำ") : t("ส่งยอดให้หัวหน้าตรวจ")}
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -370,7 +445,16 @@ function LineCard({
   const inputRef = useRef<HTMLInputElement>(null);
   const parsed = text.trim() === "" ? NaN : Number(text.replace(",", "."));
   const validManual = Number.isFinite(parsed) && parsed >= 0;
-  const save = () => onDone(Math.round(parsed * 100) / 100, document.activeElement === inputRef.current);
+  // A figure that looks like a typo (an extra zero) waits for a second "yes" before saving.
+  const [checkQty, setCheckQty] = useState<number | null>(null);
+  const save = () => {
+    const qty = Math.round(parsed * 100) / 100;
+    if (checkQty !== qty && looksTooHigh(qty, line)) {
+      setCheckQty(qty);
+      return;
+    }
+    onDone(qty, document.activeElement === inputRef.current);
+  };
 
   return (
     <section ref={ref} className="card mb-4 scroll-mt-32 p-4" aria-label={t("นับ {name}", { name: itemLabel(line) })}>
@@ -399,35 +483,30 @@ function LineCard({
         )}
       </p>
 
-      <div className="mt-3 grid gap-3">
+      {/* One line per row, recorded-movement notes on their own line underneath: keeps the card
+          short enough that "✓ ตรงกับของจริง" stays on screen on a 360×640 phone. */}
+      <div className="mt-3 grid gap-2">
         <div className="flex items-center justify-between gap-2">
-          <span>
-            <b className="block">{t("รับเข้า")}</b>
-            <span className="text-sm text-muted">
-              in
-              {line.mvIn > 0 && <span className="block text-ok">{t("บันทึกรับ/โอนเข้า {n} · + เพิ่มเอง", { n: fmtQty(line.mvIn) })}</span>}
-            </span>
-          </span>
+          <b>
+            {t("รับเข้า")} <span className="text-sm font-normal text-muted">in</span>
+          </b>
           <Stepper label={t("รับเข้า")} value={line.inQty} onChange={(inQty) => onChange({ inQty })} />
         </div>
+        {line.mvIn > 0 && <p className="-mt-1 text-sm text-ok">{t("บันทึกรับ/โอนเข้า {n} · + เพิ่มเอง", { n: fmtQty(line.mvIn) })}</p>}
         <div className="flex items-center justify-between gap-2">
-          <span>
-            <b className="block">{t("เบิกออก")}</b>
-            <span className="text-sm text-muted">
-              out
-              {line.mvOut > 0 && <span className="block text-sky">{t("บันทึกเบิก/โอน/เสีย {n} · + เพิ่มเอง", { n: fmtQty(line.mvOut) })}</span>}
-            </span>
-          </span>
+          <b>
+            {t("เบิกออก")} <span className="text-sm font-normal text-muted">out</span>
+          </b>
           <Stepper label={t("เบิกออก")} value={line.outQty} onChange={(outQty) => onChange({ outQty })} />
         </div>
+        {line.mvOut > 0 && <p className="-mt-1 text-sm text-sky">{t("บันทึกเบิก/โอน/เสีย {n} · + เพิ่มเอง", { n: fmtQty(line.mvOut) })}</p>}
       </div>
 
-      <div className="mt-4 border-t border-line pt-3">
+      <div className="mt-3 border-t border-line pt-3">
         <div className="flex items-end justify-between gap-2">
-          <span>
-            <b className="block">{t("คงเหลือ")}</b>
-            <span className="text-sm text-muted">total</span>
-          </span>
+          <b>
+            {t("คงเหลือ")} <span className="text-sm font-normal text-muted">total</span>
+          </b>
           {expected !== null && (
             <span className="text-right">
               <span className="num block text-sm text-muted">
@@ -450,7 +529,7 @@ function LineCard({
           </p>
         )}
 
-        {editing ? (
+        {editing && (
           <div className="mt-3 flex gap-2">
             <input
               ref={inputRef}
@@ -462,7 +541,10 @@ function LineCard({
               value={text}
               autoFocus={!manualOnly || keypad}
               onFocus={(e) => e.currentTarget.select()}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                setText(e.target.value);
+                setCheckQty(null);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && validManual) save();
               }}
@@ -483,7 +565,31 @@ function LineCard({
               {t("บันทึก")}
             </button>
           </div>
-        ) : (
+        )}
+        {editing && checkQty !== null && (
+          <div role="alert" className="mt-2 rounded-xl border border-warn bg-warn-soft px-3 py-2 text-sm text-warn">
+            <p className="font-semibold">
+              ⚠ {t("{qty} {unit} สูงผิดปกติ ตรวจจำนวนและหน่วยอีกครั้ง", { qty: fmtQty(checkQty), unit: line.unit })}
+            </p>
+            {expected !== null && <p>{t("ระบบคิดไว้ {qty} {unit}", { qty: fmtQty(expected), unit: line.unit })}</p>}
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setCheckQty(null);
+                  inputRef.current?.focus();
+                }}
+              >
+                {t("แก้ตัวเลข")}
+              </button>
+              <button type="button" className="btn btn-primary" onClick={() => onDone(checkQty, false)}>
+                {t("ใช่ {qty} ถูกต้อง", { qty: fmtQty(checkQty) })}
+              </button>
+            </div>
+          </div>
+        )}
+        {!editing && (
           <div className="mt-3 grid grid-cols-[auto_1fr] gap-2">
             <button
               type="button"
@@ -508,4 +614,16 @@ function LineCard({
       </div>
     </section>
   );
+}
+
+/**
+ * Catches typos like an extra zero (40 or 1000 typed for 4). Only "too high": a low count is an
+ * ordinary variance for the supervisor. The reference is what the counter can already see (the
+ * system figure, or Par + recorded/typed in for blind and first counts), so a blind item's
+ * warning gives nothing away.
+ */
+function looksTooHigh(qty: number, line: SheetLine): boolean {
+  const ref = Math.max(expectedOf(line) ?? 0, line.par + line.mvIn + line.inQty);
+  if (ref <= 0) return qty >= 1000;
+  return qty > ref * 5 && qty - ref >= 10;
 }

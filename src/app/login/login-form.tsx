@@ -20,10 +20,17 @@ function parseRecent(raw: string): string[] {
 export function LoginForm() {
   const [login, setLogin] = useState("");
   const [pin, setPin] = useState("");
+  // Failed tries on this device. Counted here, not by the server: the server must not tell
+  // a guesser which usernames exist (or how close an account is to being locked).
+  const [fails, setFails] = useState(0);
   const { t } = useT();
   const [state, action, pending] = useActionState(async (prev: { error: string | null }, form: FormData) => {
     const res = await loginAction(prev, form);
-    if (res.error) setPin("");
+    if (res.error) {
+      setPin("");
+      setFails((n) => n + 1);
+      navigator.vibrate?.(200);
+    }
     return res;
   }, { error: null });
   const recentRaw = useSyncExternalStore(
@@ -57,7 +64,10 @@ export function LoginForm() {
           autoCorrect="off"
           autoComplete="username"
           value={login}
-          onChange={(e) => setLogin(e.target.value)}
+          onChange={(e) => {
+            setLogin(e.target.value);
+            setFails(0);
+          }}
           placeholder={t("เช่น ton")}
         />
       </label>
@@ -71,6 +81,7 @@ export function LoginForm() {
               onClick={() => {
                 setLogin(r);
                 setPin("");
+                setFails(0);
               }}
               className={`pill min-h-9 border ${login === r ? "border-accent bg-accent-soft text-ink" : "border-line text-muted"}`}
             >
@@ -91,6 +102,17 @@ export function LoginForm() {
             />
           ))}
         </div>
+        {/* Right under the dots, so it's on screen even when the keypad fills a short phone. */}
+        {state.error && (
+          <div role="alert" className="mt-3 rounded-xl bg-bad-soft px-3 py-2 text-center text-sm font-medium text-bad">
+            <p>{state.error}</p>
+            {fails >= 2 && (
+              <p className="mt-1 font-normal">
+                {t("ใส่ผิดครบ 5 ครั้ง บัญชีจะถูกล็อก 5 นาที ลืม PIN ให้หัวหน้าหรือ Admin ตั้ง PIN ใหม่ให้")}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-2">
@@ -116,11 +138,6 @@ export function LoginForm() {
         </button>
       </div>
 
-      {state.error && (
-        <p role="alert" className="rounded-xl bg-bad-soft px-3 py-2 text-sm font-medium text-bad">
-          {state.error}
-        </p>
-      )}
       <button type="submit" className="btn btn-primary" disabled={pending || !login.trim() || pin.length !== PIN_LENGTH}>
         {pending ? t("กำลังเข้าสู่ระบบ…") : t("เข้าสู่ระบบ")}
       </button>

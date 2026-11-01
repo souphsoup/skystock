@@ -5,7 +5,7 @@ import { audit, refreshMoves } from "./stock";
 import { putPhoto } from "./files";
 import { businessDate } from "./dates";
 import { can, type CountStatus } from "./types";
-import { WASTE_REASONS, type MoveInput, type MoveKind } from "./movement-types";
+import { wasteReasonLabel, type MoveInput, type MoveKind } from "./movement-types";
 import { tk } from "@/i18n";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -85,7 +85,7 @@ export async function recordMovement(
   if (toLocationId === locationId) throw new HttpError(400, "จุดต้นทางและปลายทางต้องไม่ใช่ที่เดียวกัน");
 
   const reason = input.kind === "waste" ? String(input.reason ?? "") : null;
-  if (reason !== null && !(reason in WASTE_REASONS)) throw new HttpError(400, "กรุณาเลือกสาเหตุของเสีย");
+  if (reason !== null && !wasteReasonLabel(reason)) throw new HttpError(400, "กรุณาเลือกสาเหตุของเสีย");
   const note = optText(input.note, 300);
   if (reason === "other" && !note) throw new HttpError(400, "กรุณาระบุรายละเอียดสาเหตุ");
 

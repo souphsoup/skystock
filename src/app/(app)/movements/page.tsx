@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/session";
 import { listMovements } from "@/lib/movements";
 import { businessDate, fmtTime, fmtWeekday } from "@/lib/dates";
-import { KIND_LABEL, WASTE_REASONS } from "@/lib/movement-types";
+import { KIND_LABEL, wasteReasonLabel } from "@/lib/movement-types";
 import { PageHeader, fmtQty } from "@/components/status";
 import { VoidButton } from "./void-button";
 import { getT } from "@/i18n/server";
@@ -39,7 +39,7 @@ export default async function MovementsPage() {
                         {fmtTime(m.recordedAt, lang)} · {m.createdBy}
                         {m.kind === "transfer" ? ` · ${m.fromName} → ${m.toName}` : ` · ${m.fromName ?? m.toName}`}
                         {m.supplier && ` · ${m.supplier}`}
-                        {m.reason && ` · ${WASTE_REASONS[m.reason] ? t(WASTE_REASONS[m.reason]) : m.reason}`}
+                        {m.reason && ` · ${wasteReasonLabel(m.reason) ? t(wasteReasonLabel(m.reason)!) : m.reason}`}
                       </p>
                     </div>
                     {m.photoKey && (
