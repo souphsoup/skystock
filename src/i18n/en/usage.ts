@@ -33,6 +33,7 @@ const usage: Record<string, string> = {
   "เข้าสู่ระบบไม่สำเร็จ": "Failed sign-ins",
   "PIN ผิด": "Wrong PIN",
   "บัญชีถูกล็อกชั่วคราว": "Account temporarily locked",
+  "ใส่ผิดจาก IP เดียวกันเกินกำหนด": "Too many failures from one IP",
   "ไม่มีชื่อผู้ใช้นี้ หรือถูกปิดใช้งาน": "Unknown or deactivated username",
 
   // per user table

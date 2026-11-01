@@ -314,4 +314,19 @@ create index count_comments_count_idx on count_comments (count_id, created_at);
 alter table count_comments enable row level security;
 `,
   },
+  {
+    id: "010_login_throttle",
+    sql: `
+-- จำกัดการใส่ PIN ผิดต่อ IP (กันเดา PIN และกันคนนอกไล่ล็อกบัญชีคนอื่น) นับเป็นช่วงเวลา แถวเก่าลบทิ้งได้
+create table login_throttle (
+  ip text primary key,
+  window_start timestamptz not null default now(),
+  failures int not null default 0
+);
+alter table login_throttle enable row level security;
+alter table login_events drop constraint if exists login_events_reason_check;
+alter table login_events add constraint login_events_reason_check
+  check (reason in ('bad_pin','locked','unknown','pending','throttled'));
+`,
+  },
 ];

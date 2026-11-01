@@ -56,7 +56,7 @@ export interface FailedLogin {
   at: Date;
   login: string;
   name: string | null;
-  reason: "bad_pin" | "locked" | "unknown";
+  reason: "bad_pin" | "locked" | "unknown" | "pending" | "throttled";
 }
 
 export interface Usage {

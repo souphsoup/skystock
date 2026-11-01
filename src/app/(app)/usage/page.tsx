@@ -14,6 +14,8 @@ const REASON: Record<FailedLogin["reason"], string> = {
   bad_pin: tk("PIN ผิด"),
   locked: tk("บัญชีถูกล็อกชั่วคราว"),
   unknown: tk("ไม่มีชื่อผู้ใช้นี้ หรือถูกปิดใช้งาน"),
+  pending: tk("สมัครแล้ว รอ Admin อนุมัติ"),
+  throttled: tk("ใส่ผิดจาก IP เดียวกันเกินกำหนด"),
 };
 
 export default async function UsagePage({ searchParams }: PageProps<"/usage">) {

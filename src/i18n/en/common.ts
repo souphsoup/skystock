@@ -31,6 +31,7 @@ const common: Record<string, string> = {
   "กรอกชื่อผู้ใช้และ PIN 6 หลัก": "Enter your username and 6-digit PIN",
   "ชื่อผู้ใช้หรือ PIN ไม่ถูกต้อง": "Wrong username or PIN",
   "ใส่ PIN ผิดหลายครั้ง ลองใหม่ใน {n} นาที": "Too many wrong PINs. Try again in {n} minutes.",
+  "ใส่ PIN ผิดหลายครั้งจากเครือข่ายนี้ ลองใหม่ใน {n} นาที": "Too many wrong PINs from this network. Try again in {n} minutes.",
   // install gate (phones, before the app is on the home screen)
   "ติดตั้ง meStock ลงเครื่อง": "Install meStock",
   "เปิดจากไอคอนบนหน้าจอ ใช้งานได้แม้สัญญาณหลุด": "Open it from your home screen. Works even when the signal drops.",
