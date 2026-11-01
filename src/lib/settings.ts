@@ -266,6 +266,7 @@ export interface UserRow {
   role: Role;
   active: boolean;
   locked: boolean;
+  avatar: string | null;
 }
 
 const ROLES: Role[] = ["operation", "supervisor", "manager", "admin"];
@@ -273,7 +274,7 @@ const ROLES: Role[] = ["operation", "supervisor", "manager", "admin"];
 export async function listUsers(user: User): Promise<UserRow[]> {
   const db = await getDb();
   return db.query<UserRow>(
-    `select id, login, name, role, active, coalesce(locked_until > now(), false) as locked
+    `select id, login, name, role, active, coalesce(locked_until > now(), false) as locked, avatar_key as avatar
      from users where outlet_id = $1 and approval is null
      order by active desc, array_position(array['admin','manager','supervisor','operation'], role), name`,
     [user.outletId],

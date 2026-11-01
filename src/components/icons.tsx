@@ -91,3 +91,9 @@ export const IconLayers = (p: P) => (
 export const IconPhone = (p: P) => (
   <Svg {...p}><rect x="6" y="2" width="12" height="20" rx="2" /><path d="M11 18h2" /></Svg>
 );
+export const IconMonitor = (p: P) => (
+  <Svg {...p}><rect x="2" y="4" width="20" height="13" rx="2" /><path d="M8 21h8" /><path d="M12 17v4" /></Svg>
+);
+export const IconCamera = (p: P) => (
+  <Svg {...p}><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></Svg>
+);

@@ -24,6 +24,8 @@ export interface User {
   login: string;
   role: Role;
   lang: Lang;
+  /** storage key of the profile photo (serve via avatarUrl), or null */
+  avatar: string | null;
 }
 
 function secret(): Uint8Array {
@@ -61,6 +63,7 @@ export async function login(
     locked_until: Date | null;
     lang: Lang;
     approval: "pending" | "rejected" | null;
+    avatar_key: string | null;
   }>(`select * from users where login = $1`, [loginName.trim().toLowerCase()]);
 
   // One message for unknown name, wrong PIN and locked account, so a guesser can't tell which
@@ -93,7 +96,7 @@ export async function login(
 
   await issueSession(u.id, u.session_version);
   await rememberLang(u.lang);
-  return { ok: true, user: { id: u.id, outletId: u.outlet_id, name: u.name, login: u.login, role: u.role, lang: u.lang } };
+  return { ok: true, user: { id: u.id, outletId: u.outlet_id, name: u.name, login: u.login, role: u.role, lang: u.lang, avatar: u.avatar_key } };
 }
 
 /** Counts a PIN try against the account before the PIN is checked, in one UPDATE, so parallel
@@ -210,12 +213,13 @@ export const getUser = cache(async (): Promise<User | null> => {
       role: Role;
       session_version: number;
       lang: Lang;
-    }>(`select id, outlet_id, name, login, role, session_version, lang from users where id = $1 and active`, [
+      avatar_key: string | null;
+    }>(`select id, outlet_id, name, login, role, session_version, lang, avatar_key from users where id = $1 and active`, [
       Number(payload.sub),
     ]);
     if (!u || u.session_version !== payload.sv) return null;
     touchLastSeen(u.id);
-    return { id: u.id, outletId: u.outlet_id, name: u.name, login: u.login, role: u.role, lang: u.lang };
+    return { id: u.id, outletId: u.outlet_id, name: u.name, login: u.login, role: u.role, lang: u.lang, avatar: u.avatar_key };
   } catch {
     return null;
   }

@@ -355,4 +355,22 @@ create index audit_log_user_idx on audit_log (user_id, at);
 create index audit_log_at_idx on audit_log (at desc);
 `,
   },
+  {
+    id: "012_user_profile",
+    sql: `
+-- ข้อมูลส่วนตัวที่ผู้ใช้กรอกเองในหน้า "ฉัน" (เห็นเฉพาะเจ้าของบัญชีและ Admin) ทุกช่องไม่บังคับ
+-- avatar_key = path ใน storage (outlet-{id}/avatars/...) เปลี่ยนชื่อไฟล์ทุกครั้งที่อัปโหลด
+alter table users
+  add column avatar_key text,
+  add column full_name text,
+  add column nickname text,
+  add column phone text,
+  add column email text,
+  add column line_id text,
+  add column birthday date,
+  add column allergies text,
+  add column emergency_name text,
+  add column emergency_phone text;
+`,
+  },
 ];

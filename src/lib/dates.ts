@@ -86,3 +86,6 @@ export function fmtDateSlash(date: string): string {
   const [y, m, d] = date.split("-");
   return `${d}/${m}/${y}`;
 }
+/** "12 มีนาคม 2533" / "12 March 1990" (Thai uses the Buddhist year) */
+export const fmtFullDate = (date: string, lang: L = "th") =>
+  df(lang, "full", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" }).format(day(date));

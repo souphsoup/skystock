@@ -32,6 +32,7 @@ const systemUser = (outletId: number, lang: Lang = "th"): User => ({
   login: "system",
   role: "admin",
   lang,
+  avatar: null,
 });
 
 // ---------------------------------------------------------------- build
@@ -122,14 +123,14 @@ export async function buildDigest(
   return {
     date,
     lang,
-    title: t("สรุปสต๊อกเมื่อวาน"),
+    title: t("สรุปสต็อกเมื่อวาน"),
     subtitle: `${outlet?.name ?? "meStock"} · ${day}`,
     status,
     stats,
     sections,
     url: base ? `${base}/dashboard?period=week` : null,
     altText: [
-      t("สรุปสต๊อก {day}", { day }),
+      t("สรุปสต็อก {day}", { day }),
       status[0]?.text,
       alerts.length ? t("ต่ำกว่า Par {n} รายการ", { n: alerts.length }) : null,
     ]

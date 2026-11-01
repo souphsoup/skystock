@@ -13,10 +13,13 @@ import {
 } from "@/app/actions/settings";
 import { tk } from "@/i18n";
 import { useT } from "@/i18n/client";
+import { Avatar } from "@/components/avatar";
+import type { Profile } from "@/lib/profile-types";
+import { ProfileView } from "../../me/profile-details";
 
 /** label / hint are Thai keys: render with t() */
 const ROLES: { value: Role; label: string; hint: string }[] = [
-  { value: "operation", label: ROLE_LABEL.operation, hint: tk("นับสต๊อก") },
+  { value: "operation", label: ROLE_LABEL.operation, hint: tk("นับสต็อก") },
   { value: "supervisor", label: ROLE_LABEL.supervisor, hint: tk("นับ + ตรวจอนุมัติ + ตั้งค่ารายการ") },
   { value: "manager", label: ROLE_LABEL.manager, hint: tk("ดูภาพรวมและรายงาน") },
   { value: "admin", label: ROLE_LABEL.admin, hint: tk("ทุกอย่าง + จัดการผู้ใช้") },
@@ -54,7 +57,7 @@ export function RolePicker({ value, onChange }: { value: Role; onChange: (r: Rol
           aria-checked={value === r.value}
           onClick={() => onChange(r.value)}
           className={`flex min-h-12 items-center justify-between rounded-xl border px-3 text-left ${
-            value === r.value ? "border-accent bg-accent-soft" : "border-line bg-surface"
+            value === r.value ? "border-accent-line bg-accent-soft" : "border-line bg-surface"
           }`}
         >
           <b>{t(r.label)}</b>
@@ -65,7 +68,15 @@ export function RolePicker({ value, onChange }: { value: Role; onChange: (r: Rol
   );
 }
 
-export function UserList({ users, selfId }: { users: UserRow[]; selfId: number }) {
+export function UserList({
+  users,
+  profiles,
+  selfId,
+}: {
+  users: UserRow[];
+  profiles: Record<number, Profile>;
+  selfId: number;
+}) {
   const [openId, setOpenId] = useState<number | null>(null);
   const { t } = useT();
   return (
@@ -80,13 +91,19 @@ export function UserList({ users, selfId }: { users: UserRow[]; selfId: number }
               aria-expanded={openId === u.id}
               onClick={() => setOpenId(openId === u.id ? null : u.id)}
             >
-              <span className={u.active ? "" : "text-muted"}>
-                <b className="block">
-                  {u.name}
-                  {u.id === selfId && <span className="ml-1 text-sm font-normal text-muted">{t("(คุณ)")}</span>}
-                </b>
-                <span className="text-sm text-muted">
-                  {u.login} · {t(ROLE_LABEL[u.role])}
+              <span className={`flex min-w-0 items-center gap-3 ${u.active ? "" : "text-muted opacity-70"}`}>
+                <Avatar name={u.name} photo={u.avatar} />
+                <span className="min-w-0">
+                  <b className="block">
+                    {u.name}
+                    {profiles[u.id]?.nickname && profiles[u.id].nickname !== u.name && (
+                      <span className="ml-1 font-normal text-muted">({profiles[u.id].nickname})</span>
+                    )}
+                    {u.id === selfId && <span className="ml-1 text-sm font-normal text-muted">{t("(คุณ)")}</span>}
+                  </b>
+                  <span className="text-sm text-muted">
+                    {u.login} · {t(ROLE_LABEL[u.role])}
+                  </span>
                 </span>
               </span>
               <span className="flex gap-1.5">
@@ -94,7 +111,7 @@ export function UserList({ users, selfId }: { users: UserRow[]; selfId: number }
                 {!u.active && <span className="pill bg-line text-muted">{t("ปิดใช้งาน")}</span>}
               </span>
             </button>
-            {openId === u.id && <UserActions user={u} isSelf={u.id === selfId} />}
+            {openId === u.id && <UserActions user={u} profile={profiles[u.id]} isSelf={u.id === selfId} />}
           </li>
         ))}
       </ul>
@@ -171,7 +188,7 @@ function AddUser() {
   );
 }
 
-function UserActions({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
+function UserActions({ user, profile, isSelf }: { user: UserRow; profile?: Profile; isSelf: boolean }) {
   const [name, setName] = useState(user.name);
   const [role, setRole] = useState<Role>(user.role);
   const [pin, setPin] = useState("");
@@ -181,6 +198,16 @@ function UserActions({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
 
   return (
     <div className="grid gap-4 bg-paper px-4 py-4">
+      {profile && Object.values(profile).some(Boolean) ? (
+        <details className="rounded-xl border border-line bg-surface px-3 py-2">
+          <summary className="min-h-9 cursor-pointer content-center text-sm font-semibold">{t("ข้อมูลส่วนตัว")}</summary>
+          <div className="pb-2 pt-2">
+            <ProfileView profile={profile} />
+          </div>
+        </details>
+      ) : (
+        <p className="text-sm text-muted">{t("ผู้ใช้ยังไม่ได้กรอกข้อมูลส่วนตัว")}</p>
+      )}
       <div className="grid gap-2">
         <label className="grid gap-1 text-sm">
           <span className="text-muted">{t("ชื่อที่แสดง")}</span>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Avatar } from "@/components/avatar";
 import { requireUser } from "@/lib/session";
 import { reviewQueue, stockAlerts } from "@/lib/stock";
 import { pendingProposals } from "@/lib/proposals";
@@ -7,6 +8,7 @@ import { can, ROLE_LABEL } from "@/lib/types";
 import { BottomNav, type NavItem } from "@/components/bottom-nav";
 import { SideNav, type SideGroup } from "@/components/side-nav";
 import { IdleGuard } from "@/components/idle-guard";
+import { RememberDevice } from "@/components/remember-device";
 import { getT } from "@/i18n/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       title: t("ติดตาม"),
       items: [
         ...(can.console(r) ? [{ href: "/admin", label: t("ภาพรวมผู้บริหาร"), icon: "console" as const }] : []),
-        ...(can.console(r) ? [{ href: "/admin/stock", label: t("รายงานสต๊อก"), icon: "stock" as const }] : []),
+        ...(can.console(r) ? [{ href: "/admin/stock", label: t("รายงานสต็อก"), icon: "stock" as const }] : []),
         ...(can.dashboard(r) && !can.console(r) ? [{ href: "/dashboard", label: t("ภาพรวม"), icon: "console" as const }] : []),
         ...(queue ? [{ href: "/review", label: t("อนุมัติ"), icon: "review" as const, badge: reviewBadge }] : []),
         { href: "/alerts", label: t("แจ้งเตือน"), icon: "alerts", badge: alerts.length },
@@ -66,13 +68,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <IdleGuard />
+      <RememberDevice login={user.login} name={user.name} />
       <SideNav
         groups={groups}
         footer={
           <Link href="/me" className="flex min-h-11 items-center gap-3 rounded-lg px-3 hover:bg-paper">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold">
-              {user.name.slice(0, 1)}
-            </span>
+            <Avatar name={user.name} photo={user.avatar} size="sm" />
             <span className="min-w-0 flex-1 leading-tight">
               <b className="block truncate text-sm">{user.name}</b>
               <span className="text-xs text-muted">{t(ROLE_LABEL[user.role])}</span>
